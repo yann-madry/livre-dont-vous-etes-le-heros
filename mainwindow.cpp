@@ -25,6 +25,10 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QUrl>
+#include <QDesktopServices>
+#include <QMouseEvent>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -36,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionItalique->setCheckable(true);
     ui->actionSouligner->setCheckable(true);
 
-    ui->toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+
 
     creerZoneCentrale();
 
@@ -75,6 +79,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     definirFichierCourant("");
     majStatistiques();
+
+
+    //gestion ouverture lien
+    ui->editeur->setTextInteractionFlags(Qt::TextEditorInteraction | Qt::LinksAccessibleByMouse);
+    ui->editeur->viewport()->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
@@ -397,7 +406,25 @@ void MainWindow::insererLien()
         return;
     if (texte.isEmpty())
         texte = url;
+    // On force un HTML ultra-simple et parfait
     ui->editeur->insertHtml(QString("<a href=\"%1\">%2</a> ").arg(url, texte));
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == ui->editeur->viewport() && event->type() == QEvent::MouseButtonRelease) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+
+        if (mouseEvent->button() == Qt::LeftButton) {
+            QString lien = ui->editeur->anchorAt(mouseEvent->pos());
+
+            if (!lien.isEmpty()) {
+                QDesktopServices::openUrl(QUrl(lien));
+            }
+        }
+    }
+
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::insererImage()
@@ -516,3 +543,4 @@ void MainWindow::majTitre()
     : QFileInfo(m_fichierCourant).fileName();
     setWindowTitle(nom + "[*] - Éditeur LDVELH");
 }
+

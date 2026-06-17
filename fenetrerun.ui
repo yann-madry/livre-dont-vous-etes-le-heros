@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FenetreRun</class>
+ <widget class="QWidget" name="FenetreRun">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>560</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mode lecture — Jouer le livre</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#FenetreRun { background:#faf6ee; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="layoutPrincipal">
+   <item>
+    <widget class="QLabel" name="etiquetteTitre">
+     <property name="styleSheet">
+      <string notr="true">font-size:24px; font-weight:bold; color:#5a3d23; padding:6px;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="text">
+      <string>Titre</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="zoneTexte"/>
+   </item>
+   <item>
+    <widget class="QLabel" name="etiquetteEtat">
+     <property name="styleSheet">
+      <string notr="true">font-weight:bold; color:#7a4f29; padding:6px; background:#efe2c4; border-radius:4px;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="text">
+      <string>PV : 100   |   XP : 0   |   Objets : aucun</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="conteneurChoix" native="true">
+     <layout class="QVBoxLayout" name="layoutChoix"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btnRecommencer">
+     <property name="text">
+      <string>↻ Recommencer depuis le début</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

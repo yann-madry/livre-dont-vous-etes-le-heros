@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QList>
 #include <QString>
+#include "livre.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -11,6 +12,8 @@ QT_END_NAMESPACE
 
 class QLabel;
 class QListWidgetItem;
+class QTimer;
+class FenetreRun;
 
 class MainWindow : public QMainWindow
 {
@@ -22,23 +25,25 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    bool eventFilter(QObject *objet, QEvent *event) override;
 
 private slots:
-    // Fichier
     void nouveau();
     void ouvrir();
     bool enregistrer();
     bool enregistrerSous();
     void exporterHtml();
+    void exporterSite();
+    void exporterPdf();
     void imprimer();
+    void apercuImpression();
+    void sauvegardeAuto();
     void aPropos();
 
-    // Pages
     void nouvellePage();
     void supprimerPage();
     void changerPage(QListWidgetItem *courant, QListWidgetItem *precedent);
 
-    // Mise en forme
     void choisirPolice();
     void choisirCouleur();
     void basculerGras();
@@ -46,7 +51,6 @@ private slots:
     void surligner();
     void souligner();
 
-    // Insertion
     void insererLien();
     void insererImage();
     void insererListe();
@@ -54,14 +58,21 @@ private slots:
     void marquerModifie();
     void majStatistiques();
 
+    void changerOnglet(int index);
+
 private:
     struct PageDoc {
         QString titre;
         QString html;
     };
 
+    Livre construireLivre() const;
+
     void creerMenusSupplementaires();
     void definirRaccourcis();
+    void deposerFichier(const QString &chemin);
+    QString corpsDeHtml(const QString &html) const;
+    QString gabaritPage(const QString &titre, const QString &corps) const;
 
     void rafraichirListePages();
     void afficherPage(int index);
@@ -79,6 +90,8 @@ private:
 
     QList<PageDoc> m_pages;
     int m_pageCourante = -1;
+    QTimer *m_minuterie = nullptr;
+    FenetreRun *m_vueRun = nullptr;
 };
 
-#endif // MAINWINDOW_H
+#endif

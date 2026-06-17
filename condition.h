@@ -6,12 +6,6 @@
 
 #include "etatjoueur.h"
 
-/**
- * Un choix peut n'apparaître que si sa condition est remplie :
- *  - Aucune          : le choix est toujours visible ;
- *  - PossederObjet   : le joueur doit avoir l'objet `valeur` ;
- *  - EtrePasseParPage: le joueur doit être déjà passé par la page `idPage`.
- */
 class Condition
 {
 public:
@@ -24,16 +18,14 @@ public:
     Condition() = default;
 
     Type type() const;
-    QString valeur() const;   // nom de l'objet requis
-    int idPage() const;       // id de la page requise
+    QString valeur() const;
+    int idPage() const;
 
     void setObjetRequis(const QString &objet);
     void setPageRequise(int idPage);
     void reinitialiser();
 
-    /// Vrai si la condition est satisfaite par l'état du joueur.
     bool estRemplie(const EtatJoueur &etat) const;
-
 
     QJsonObject versJson() const;
     static Condition depuisJson(const QJsonObject &o);
@@ -44,4 +36,4 @@ private:
     int m_idPage = -1;
 };
 
-#endif // CONDITION_H
+#endif

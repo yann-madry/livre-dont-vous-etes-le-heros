@@ -14,9 +14,19 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="layoutCentral">
+   <layout class="QVBoxLayout" name="layoutRacine">
     <item>
-     <widget class="QWidget" name="panneauGauche" native="true">
+     <widget class="QTabWidget" name="ongletsPrincipaux">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="ongletEdition">
+       <attribute name="title">
+        <string>Édition</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="layoutCentral">
+        <item>
+         <widget class="QWidget" name="panneauGauche" native="true">
       <property name="maximumSize">
        <size>
         <width>240</width>
@@ -90,6 +100,16 @@
         <widget class="QTextEdit" name="editeur"/>
        </item>
       </layout>
+     </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="ongletLecture">
+       <attribute name="title">
+        <string>Lecture</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="layoutLecture"/>
+      </widget>
      </widget>
     </item>
    </layout>

@@ -1,10 +1,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "fenetrerun.h"
+#include "page.h"
+#include "choix.h"
+#include "condition.h"
 
 #include <QAction>
 #include <QCloseEvent>
 #include <QColorDialog>
 #include <QDateTime>
+#include <QDesktopServices>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMouseEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -12,6 +20,10 @@
 #include <QIcon>
 #include <QImage>
 #include <QInputDialog>
+#include <QMimeData>
+#include <QPrintPreviewDialog>
+#include <QTimer>
+#include <QUrl>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -26,6 +38,7 @@
 #include <QPrinter>
 #include <QRegularExpression>
 #include <QStatusBar>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QTextList>
 #include <QTextStream>
@@ -41,12 +54,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionItalique->setCheckable(true);
     ui->actionSouligner->setCheckable(true);
 
-    connect(ui->actionNouveau,        &QAction::triggered, this, &MainWindow::nouveau);
-    connect(ui->actionOuvrir,         &QAction::triggered, this, &MainWindow::ouvrir);
-    connect(ui->actionEnregistrer,    &QAction::triggered, this, &MainWindow::enregistrer);
-    connect(ui->actionEnregistrerSous,&QAction::triggered, this, &MainWindow::enregistrerSous);
-    connect(ui->actionQuitter,        &QAction::triggered, this, &QWidget::close);
-    connect(ui->actionAPropos,        &QAction::triggered, this, &MainWindow::aPropos);
+    connect(ui->actionNouveau,         &QAction::triggered, this, &MainWindow::nouveau);
+    connect(ui->actionOuvrir,          &QAction::triggered, this, &MainWindow::ouvrir);
+    connect(ui->actionEnregistrer,     &QAction::triggered, this, &MainWindow::enregistrer);
+    connect(ui->actionEnregistrerSous, &QAction::triggered, this, &MainWindow::enregistrerSous);
+    connect(ui->actionQuitter,         &QAction::triggered, this, &QWidget::close);
+    connect(ui->actionAPropos,         &QAction::triggered, this, &MainWindow::aPropos);
 
     connect(ui->actionGras,      &QAction::triggered, this, &MainWindow::basculerGras);
     connect(ui->actionItalique,  &QAction::triggered, this, &MainWindow::basculerItalique);
@@ -68,11 +81,41 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->editeur, &QTextEdit::textChanged, this, &MainWindow::majStatistiques);
     connect(ui->titre,   &QLineEdit::textChanged, this, &MainWindow::marquerModifie);
 
+    connect(ui->titre, &QLineEdit::textChanged, this, [this](const QString &t) {
+        if (m_pageCourante >= 0 && m_pageCourante < m_pages.size()) {
+            m_pages[m_pageCourante].titre = t;
+            QListWidgetItem *it = ui->listePages->item(m_pageCourante);
+            if (it != nullptr) {
+                QString libelle;
+                if (t.isEmpty())
+                    libelle = "(sans titre)";
+                else
+                    libelle = t;
+                it->setText("Page " + QString::number(m_pageCourante + 1) + " — " + libelle
+                            + "  (page" + QString::number(m_pageCourante + 1) + ".html)");
+            }
+        }
+    });
+
     m_statut = new QLabel(this);
     statusBar()->addPermanentWidget(m_statut);
 
     creerMenusSupplementaires();
     definirRaccourcis();
+
+    ui->editeur->setAcceptDrops(true);
+    ui->editeur->installEventFilter(this);
+
+    ui->editeur->setTextInteractionFlags(Qt::TextEditorInteraction | Qt::LinksAccessibleByMouse);
+    ui->editeur->viewport()->installEventFilter(this);
+
+    m_minuterie = new QTimer(this);
+    connect(m_minuterie, &QTimer::timeout, this, &MainWindow::sauvegardeAuto);
+    m_minuterie->start(60000);
+
+    m_vueRun = new FenetreRun(this);
+    ui->layoutLecture->addWidget(m_vueRun);
+    connect(ui->ongletsPrincipaux, &QTabWidget::currentChanged, this, &MainWindow::changerOnglet);
 
     m_pages.append({ "Page de départ", QString() });
     rafraichirListePages();
@@ -87,25 +130,36 @@ MainWindow::~MainWindow()
 
 void MainWindow::creerMenusSupplementaires()
 {
-    // --- Menu Fichier : Imprimer + Exporter (insérés avant "A Propos") ---
     QAction *actImprimer = new QAction(QIcon(":/Icones/print.png"), "Imprimer...", this);
     actImprimer->setShortcut(QKeySequence::Print);
     connect(actImprimer, &QAction::triggered, this, &MainWindow::imprimer);
     ui->menuFichier->insertAction(ui->actionAPropos, actImprimer);
 
-    QAction *actExport = new QAction(QIcon::fromTheme("document-export"), "Exporter en page web...", this);
+    QAction *actExport = new QAction("Exporter la page en web...", this);
     connect(actExport, &QAction::triggered, this, &MainWindow::exporterHtml);
     ui->menuFichier->insertAction(ui->actionAPropos, actExport);
+
+    QAction *actSite = new QAction("Exporter le site complet...", this);
+    connect(actSite, &QAction::triggered, this, &MainWindow::exporterSite);
+    ui->menuFichier->insertAction(ui->actionAPropos, actSite);
+
+    QAction *actPdf = new QAction("Exporter en PDF...", this);
+    connect(actPdf, &QAction::triggered, this, &MainWindow::exporterPdf);
+    ui->menuFichier->insertAction(ui->actionAPropos, actPdf);
+
+    QAction *actApercu = new QAction("Aperçu avant impression...", this);
+    connect(actApercu, &QAction::triggered, this, &MainWindow::apercuImpression);
+    ui->menuFichier->insertAction(ui->actionAPropos, actApercu);
+
     ui->menuFichier->insertSeparator(ui->actionAPropos);
 
-    // --- Menu Édition : annuler / rétablir / couper / copier / coller / tout ---
     ui->menuEdition->addSeparator();
-    QAction *annuler = ui->menuEdition->addAction(QIcon(":/Icones/edit_undo.png"), "Annuler");
+    QAction *annuler  = ui->menuEdition->addAction(QIcon(":/Icones/edit_undo.png"), "Annuler");
     QAction *retablir = ui->menuEdition->addAction(QIcon(":/Icones/edit_redo.png"), "Rétablir");
-    QAction *couper = ui->menuEdition->addAction(QIcon(":/Icones/cut.png"), "Couper");
-    QAction *copier = ui->menuEdition->addAction(QIcon(":/Icones/copy.png"), "Copier");
-    QAction *coller = ui->menuEdition->addAction(QIcon(":/Icones/paste.png"), "Coller");
-    QAction *toutSel = ui->menuEdition->addAction("Tout sélectionner");
+    QAction *couper   = ui->menuEdition->addAction(QIcon(":/Icones/cut.png"), "Couper");
+    QAction *copier   = ui->menuEdition->addAction(QIcon(":/Icones/copy.png"), "Copier");
+    QAction *coller   = ui->menuEdition->addAction(QIcon(":/Icones/paste.png"), "Coller");
+    QAction *toutSel  = ui->menuEdition->addAction("Tout sélectionner");
     connect(annuler,  &QAction::triggered, ui->editeur, &QTextEdit::undo);
     connect(retablir, &QAction::triggered, ui->editeur, &QTextEdit::redo);
     connect(couper,   &QAction::triggered, ui->editeur, &QTextEdit::cut);
@@ -119,7 +173,6 @@ void MainWindow::creerMenusSupplementaires()
     coller->setShortcut(QKeySequence::Paste);
     toutSel->setShortcut(QKeySequence::SelectAll);
 
-    // Les mêmes dans la barre d'outils.
     ui->toolBar->addSeparator();
     ui->toolBar->addAction(annuler);
     ui->toolBar->addAction(retablir);
@@ -127,30 +180,28 @@ void MainWindow::creerMenusSupplementaires()
     ui->toolBar->addAction(copier);
     ui->toolBar->addAction(coller);
 
-    // --- Menu Insertion ---
     QMenu *menuInsertion = menuBar()->addMenu("Insertion");
-    QAction *lien = menuInsertion->addAction(QIcon::fromTheme("insert-link"), "Insérer un lien...");
+    QAction *lien = menuInsertion->addAction(QIcon(":/Icones/lien.png"), "Insérer un lien...");
     lien->setShortcut(QKeySequence("Ctrl+L"));
     connect(lien, &QAction::triggered, this, &MainWindow::insererLien);
-    QAction *image = menuInsertion->addAction(QIcon::fromTheme("lien"), "Insérer une image...");
+    QAction *image = menuInsertion->addAction(QIcon(":/Icones/photo.png"), "Insérer une image...");
     connect(image, &QAction::triggered, this, &MainWindow::insererImage);
-    QAction *liste = menuInsertion->addAction(QIcon::fromTheme("liste"), "Liste à puces");
+    QAction *liste = menuInsertion->addAction(QIcon(":/Icones/liste.png"), "Liste à puces");
     connect(liste, &QAction::triggered, this, &MainWindow::insererListe);
-    QAction *date = menuInsertion->addAction(QIcon::fromTheme("date"), "Insérer la date");
+    QAction *date = menuInsertion->addAction(QIcon(":/Icones/date.png"), "Insérer la date");
     connect(date, &QAction::triggered, this, [this]() {
         ui->editeur->insertPlainText(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm"));
     });
 
-    // --- Menu Outils ---
     QMenu *menuOutils = menuBar()->addMenu("Outils");
-    QAction *zoomP = menuOutils->addAction(QIcon::fromTheme("zoom"), "Zoom avant");
+    QAction *zoomP = menuOutils->addAction(QIcon(":/Icones/zoom.png"), "Zoom avant");
     zoomP->setShortcut(QKeySequence::ZoomIn);
     connect(zoomP, &QAction::triggered, this, [this]() { ui->editeur->zoomIn(2); });
-    QAction *zoomM = menuOutils->addAction(QIcon::fromTheme("zoom"), "Zoom arrière");
+    QAction *zoomM = menuOutils->addAction(QIcon(":/Icones/zoom.png"), "Zoom arrière");
     zoomM->setShortcut(QKeySequence::ZoomOut);
     connect(zoomM, &QAction::triggered, this, [this]() { ui->editeur->zoomOut(2); });
     menuOutils->addSeparator();
-    QAction *html = menuOutils->addAction(QIcon::fromTheme("text-html"), "Afficher le code HTML");
+    QAction *html = menuOutils->addAction("Afficher le code HTML");
     html->setCheckable(true);
     connect(html, &QAction::triggered, this, [this, html]() {
         if (html->isChecked())
@@ -158,6 +209,92 @@ void MainWindow::creerMenusSupplementaires()
         else
             ui->editeur->setHtml(ui->editeur->toPlainText());
     });
+}
+
+Livre MainWindow::construireLivre() const
+{
+    Livre livre;
+
+    for (int i = 0; i < m_pages.size(); ++i) {
+        int id = i + 1;
+        Page page(id, m_pages[i].titre);
+        page.setTexteHtml(m_pages[i].html);
+
+        QString titreMin = m_pages[i].titre.toLower();
+        if (titreMin.contains("victoire"))
+            page.setType(Page::Type::Victoire);
+        else if (titreMin.contains("defaite") || titreMin.contains("défaite") || titreMin.contains("mort"))
+            page.setType(Page::Type::Defaite);
+
+        QRegularExpression reLien("<a\\b[^>]*href=\"([^\"]*)\"[^>]*>(.*?)</a>",
+                                  QRegularExpression::DotMatchesEverythingOption
+                                  | QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatchIterator it = reLien.globalMatch(m_pages[i].html);
+        while (it.hasNext()) {
+            QRegularExpressionMatch correspondance = it.next();
+            QString href = correspondance.captured(1);
+            QString libelle = correspondance.captured(2);
+            libelle.remove(QRegularExpression("<[^>]*>"));
+            libelle = libelle.trimmed();
+
+            QString base = href;
+            QString fragment;
+            int diese = href.indexOf('#');
+            if (diese != -1) {
+                base = href.left(diese);
+                fragment = href.mid(diese + 1);
+            }
+
+            int cible = -1;
+            QRegularExpression reNum("(\\d+)");
+            QRegularExpressionMatch mNum = reNum.match(base);
+            if (mNum.hasMatch())
+                cible = mNum.captured(1).toInt();
+
+            Choix choix(libelle, cible);
+
+            if (!fragment.isEmpty()) {
+                QStringList parties = fragment.split(';', Qt::SkipEmptyParts);
+                for (int k = 0; k < parties.size(); ++k) {
+                    QStringList kv = parties[k].split('=');
+                    if (kv.size() != 2)
+                        continue;
+                    QString cle = kv[0].toLower();
+                    QString valeur = kv[1];
+                    if (cle == "pv") {
+                        choix.setDeltaPV(valeur.toInt());
+                    } else if (cle == "xp") {
+                        choix.setDeltaXP(valeur.toInt());
+                    } else if (cle == "objet") {
+                        choix.setObjetGagne(valeur);
+                    } else if (cle == "requiert") {
+                        Condition condition;
+                        condition.setObjetRequis(valeur);
+                        choix.setCondition(condition);
+                    } else if (cle == "requiertpage") {
+                        Condition condition;
+                        condition.setPageRequise(valeur.toInt());
+                        choix.setCondition(condition);
+                    }
+                }
+            }
+
+            page.ajouterChoix(choix);
+        }
+
+        livre.ajouterPage(page);
+    }
+
+    livre.setIdPageDepart(1);
+    return livre;
+}
+
+void MainWindow::changerOnglet(int index)
+{
+    if (ui->ongletsPrincipaux->widget(index) == ui->ongletLecture) {
+        sauvegarderPageCourante();
+        m_vueRun->chargerLivre(construireLivre());
+    }
 }
 
 void MainWindow::definirRaccourcis()
@@ -174,17 +311,19 @@ void MainWindow::definirRaccourcis()
     ui->actionSurligner->setShortcut(QKeySequence("Ctrl+H"));
 }
 
-// ---------------------------------------------------------------------------
-// Pages (stockage local)
-// ---------------------------------------------------------------------------
-
 void MainWindow::rafraichirListePages()
 {
     ui->listePages->blockSignals(true);
     ui->listePages->clear();
     for (int i = 0; i < m_pages.size(); ++i) {
-        const QString t = m_pages[i].titre.isEmpty() ? "(sans titre)" : m_pages[i].titre;
-        QListWidgetItem *item = new QListWidgetItem(QString("Page %1 — %2").arg(i + 1).arg(t));
+        QString t;
+        if (m_pages[i].titre.isEmpty())
+            t = "(sans titre)";
+        else
+            t = m_pages[i].titre;
+        QListWidgetItem *item = new QListWidgetItem(
+            "Page " + QString::number(i + 1) + " — " + t
+            + "  (page" + QString::number(i + 1) + ".html)");
         item->setData(Qt::UserRole, i);
         ui->listePages->addItem(item);
     }
@@ -250,10 +389,6 @@ void MainWindow::supprimerPage()
     ui->listePages->setCurrentRow(0);
 }
 
-// ---------------------------------------------------------------------------
-// Fichier
-// ---------------------------------------------------------------------------
-
 void MainWindow::nouveau()
 {
     if (!confirmerAbandonModifs())
@@ -271,7 +406,7 @@ void MainWindow::ouvrir()
     if (!confirmerAbandonModifs())
         return;
     const QString chemin = QFileDialog::getOpenFileName(this, "Ouvrir", QString(),
-                                                        "Tous les formats (*.json *.html *.txt);;Livre LDVELH (*.json);;HTML (*.html);;Texte (*.txt)");
+        "Tous les formats (*.json *.html *.txt);;Livre LDVELH (*.json);;HTML (*.html);;Texte (*.txt)");
     if (!chemin.isEmpty())
         chargerFichier(chemin);
 }
@@ -286,7 +421,7 @@ bool MainWindow::enregistrer()
 bool MainWindow::enregistrerSous()
 {
     const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(),
-                                                        "Livre LDVELH (*.json);;Page HTML (*.html);;Texte (*.txt)");
+        "Livre LDVELH (*.json);;Page HTML (*.html);;Texte (*.txt)");
     if (chemin.isEmpty())
         return false;
     return ecrireFichier(chemin);
@@ -304,18 +439,15 @@ bool MainWindow::ecrireFichier(const QString &chemin)
     QTextStream flux(&fichier);
 
     if (chemin.endsWith(".html", Qt::CaseInsensitive)) {
-        // Page courante en HTML brut.
         flux << ui->editeur->toHtml();
     } else if (chemin.endsWith(".txt", Qt::CaseInsensitive)) {
-        // Page courante en texte simple.
         flux << ui->editeur->toPlainText();
     } else {
-        // Livre complet en JSON (toutes les pages).
         QJsonArray tableau;
-        for (const PageDoc &p : m_pages) {
+        for (int i = 0; i < m_pages.size(); ++i) {
             QJsonObject o;
-            o["titre"] = p.titre;
-            o["html"]  = p.html;
+            o["titre"] = m_pages[i].titre;
+            o["html"]  = m_pages[i].html;
             tableau.append(o);
         }
         QJsonObject racine;
@@ -343,14 +475,16 @@ void MainWindow::chargerFichier(const QString &chemin)
         const QJsonDocument doc = QJsonDocument::fromJson(donnees);
         m_pages.clear();
         const QJsonArray tableau = doc.object()["pages"].toArray();
-        for (const QJsonValue &v : tableau) {
-            const QJsonObject o = v.toObject();
-            m_pages.append({ o["titre"].toString(), o["html"].toString() });
+        for (int i = 0; i < tableau.size(); ++i) {
+            QJsonObject o = tableau[i].toObject();
+            PageDoc p;
+            p.titre = o["titre"].toString();
+            p.html = o["html"].toString();
+            m_pages.append(p);
         }
         if (m_pages.isEmpty())
             m_pages.append({ "Page de départ", QString() });
     } else {
-        // HTML ou texte : on charge dans une seule page.
         PageDoc p;
         p.titre = QFileInfo(chemin).completeBaseName();
         if (chemin.endsWith(".html", Qt::CaseInsensitive))
@@ -376,9 +510,233 @@ void MainWindow::imprimer()
         ui->editeur->print(&imprimante);
 }
 
-// ---------------------------------------------------------------------------
-// Export en page web (page courante)
-// ---------------------------------------------------------------------------
+void MainWindow::apercuImpression()
+{
+    QPrinter imprimante;
+    QPrintPreviewDialog apercu(&imprimante, this);
+    connect(&apercu, &QPrintPreviewDialog::paintRequested, this, [this](QPrinter *p) {
+        ui->editeur->print(p);
+    });
+    apercu.exec();
+}
+
+void MainWindow::exporterPdf()
+{
+    const QString chemin = QFileDialog::getSaveFileName(this, "Exporter en PDF",
+                                                        QString(), "PDF (*.pdf)");
+    if (chemin.isEmpty())
+        return;
+
+    QPrinter imprimante(QPrinter::HighResolution);
+    imprimante.setOutputFormat(QPrinter::PdfFormat);
+    imprimante.setOutputFileName(chemin);
+    ui->editeur->document()->print(&imprimante);
+    statusBar()->showMessage("PDF exporté : " + chemin, 3000);
+}
+
+void MainWindow::sauvegardeAuto()
+{
+    if (!m_fichierCourant.isEmpty() && isWindowModified()) {
+        ecrireFichier(m_fichierCourant);
+        statusBar()->showMessage("Sauvegarde automatique", 2000);
+    }
+}
+
+void MainWindow::deposerFichier(const QString &chemin)
+{
+    QString ext = QFileInfo(chemin).suffix().toLower();
+
+    if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "bmp" || ext == "gif") {
+        QImage image(chemin);
+        if (!image.isNull())
+            ui->editeur->textCursor().insertImage(image);
+        return;
+    }
+
+    QFile fichier(chemin);
+    if (!fichier.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+    const QString contenu = QString::fromUtf8(fichier.readAll());
+    fichier.close();
+
+    if (ext == "html")
+        ui->editeur->insertHtml(contenu);
+    else
+        ui->editeur->insertPlainText(contenu);
+}
+
+bool MainWindow::eventFilter(QObject *objet, QEvent *event)
+{
+    if (objet == ui->editeur->viewport() && event->type() == QEvent::MouseButtonRelease) {
+        QMouseEvent *e = static_cast<QMouseEvent *>(event);
+        if (e->button() == Qt::LeftButton) {
+            QString lien = ui->editeur->anchorAt(e->pos());
+            if (!lien.isEmpty()) {
+                QDesktopServices::openUrl(QUrl(lien));
+                return true;
+            }
+        }
+    }
+
+    if (objet == ui->editeur) {
+        if (event->type() == QEvent::DragEnter) {
+            QDragEnterEvent *e = static_cast<QDragEnterEvent *>(event);
+            if (e->mimeData()->hasUrls()) {
+                e->acceptProposedAction();
+                return true;
+            }
+        } else if (event->type() == QEvent::Drop) {
+            QDropEvent *e = static_cast<QDropEvent *>(event);
+            if (e->mimeData()->hasUrls()) {
+                QList<QUrl> urls = e->mimeData()->urls();
+                if (!urls.isEmpty()) {
+                    deposerFichier(urls.first().toLocalFile());
+                    e->acceptProposedAction();
+                    return true;
+                }
+            }
+        }
+    }
+    return QMainWindow::eventFilter(objet, event);
+}
+
+QString MainWindow::corpsDeHtml(const QString &html) const
+{
+    QString corps = html;
+    int debut = html.indexOf("<body");
+    if (debut != -1) {
+        debut = html.indexOf('>', debut) + 1;
+        int fin = html.indexOf("</body>", debut);
+        corps = html.mid(debut, fin - debut);
+    }
+    return corps;
+}
+
+QString MainWindow::gabaritPage(const QString &titre, const QString &corps) const
+{
+    const QString modele = QStringLiteral(R"HTML(<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 48px 20px;
+    background: radial-gradient(circle at 50% 0%, #3a3326, #1d1a14 70%);
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #33271a;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: auto;
+    padding: 56px 60px;
+    background: #efe2c4;
+    background-image: radial-gradient(rgba(120,90,40,.07) 1px, transparent 1px);
+    background-size: 13px 13px;
+    border: 1px solid #b89b6e;
+    border-radius: 5px;
+    box-shadow: 0 0 0 7px rgba(0,0,0,.28), 0 18px 44px rgba(0,0,0,.6);
+    position: relative;
+    animation: apparition .6s ease;
+  }
+
+  .page::before {
+    content: '';
+    position: absolute;
+    inset: 11px;
+    border: 1px solid rgba(138,99,52,.4);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  @keyframes apparition {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; }
+  }
+
+  .ornement {
+    text-align: center;
+    color: #a07b46;
+    letter-spacing: 6px;
+    font-size: 14px;
+  }
+
+  h1.titre {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    text-align: center;
+    color: #5a3d23;
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+    margin: 6px 0 24px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,.45);
+  }
+
+  .contenu p {
+    line-height: 1.85;
+    font-size: 1.15rem;
+    text-align: justify;
+  }
+
+  .contenu > p:first-of-type::first-letter {
+    float: left;
+    font-family: 'Cinzel', serif;
+    font-size: 3.6rem;
+    line-height: .8;
+    color: #8b3a1d;
+    padding: 6px 10px 0 0;
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 20px auto;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  }
+
+  a {
+    display: inline-block;
+    margin: 8px;
+    padding: 13px 26px;
+    background: linear-gradient(#9c6a3b, #7a4f29);
+    color: #fff5e6;
+    text-decoration: none;
+    border: 1px solid #5a3a1c;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: .5px;
+    box-shadow: 0 4px 0 #4a3017, 0 6px 12px rgba(0,0,0,.4);
+    transition: all .15s ease;
+  }
+
+  a:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 #4a3017, 0 10px 18px rgba(0,0,0,.45); }
+  a:active { transform: translateY(2px);  box-shadow: 0 1px 0 #4a3017; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ornement">&#10022; &#10022; &#10022;</div>
+    <h1 class="titre">%1</h1>
+    <div class="contenu">
+%2
+    </div>
+  </div>
+</body>
+</html>
+)HTML");
+
+    return modele.arg(titre, corps);
+}
 
 void MainWindow::exporterHtml()
 {
@@ -389,59 +747,13 @@ void MainWindow::exporterHtml()
     if (chemin.isEmpty())
         return;
 
-    const QString titre = ui->titre->text().isEmpty() ? "Mon livre" : ui->titre->text();
+    QString titre;
+    if (ui->titre->text().isEmpty())
+        titre = "Mon livre";
+    else
+        titre = ui->titre->text();
 
-    const QString htmlEditeur = ui->editeur->toHtml();
-    QString corps = htmlEditeur;
-    int debut = htmlEditeur.indexOf("<body");
-    if (debut != -1) {
-        debut = htmlEditeur.indexOf('>', debut) + 1;
-        int fin = htmlEditeur.indexOf("</body>", debut);
-        corps = htmlEditeur.mid(debut, fin - debut);
-    }
-
-    const QString page = QString(
-                             "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"UTF-8\">\n"
-                             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-                             "<title>%1</title>\n"
-                             "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n"
-                             "<link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&"
-                             "family=EB+Garamond:ital@0;1&display=swap\" rel=\"stylesheet\">\n"
-                             "<style>\n"
-                             "  * { box-sizing:border-box; }\n"
-                             "  body { margin:0; min-height:100vh; padding:48px 20px;\n"
-                             "         background:radial-gradient(circle at 50% 0%, #3a3326, #1d1a14 70%);\n"
-                             "         font-family:'EB Garamond', Georgia, serif; color:#33271a; }\n"
-                             "  .page { max-width:760px; margin:auto; background:#efe2c4;\n"
-                             "          background-image:radial-gradient(rgba(120,90,40,.07) 1px, transparent 1px);\n"
-                             "          background-size:13px 13px; padding:56px 60px; border-radius:5px;\n"
-                             "          border:1px solid #b89b6e;\n"
-                             "          box-shadow:0 0 0 7px rgba(0,0,0,.28), 0 18px 44px rgba(0,0,0,.6);\n"
-                             "          position:relative; animation:apparition .6s ease; }\n"
-                             "  .page::before { content:''; position:absolute; inset:11px;\n"
-                             "          border:1px solid rgba(138,99,52,.4); border-radius:3px; pointer-events:none; }\n"
-                             "  @keyframes apparition { from{opacity:0; transform:translateY(12px);} to{opacity:1;} }\n"
-                             "  .ornement { text-align:center; color:#a07b46; letter-spacing:6px; font-size:14px; }\n"
-                             "  h1.titre { font-family:'Cinzel', serif; font-weight:800; text-align:center;\n"
-                             "          color:#5a3d23; font-size:2.2rem; letter-spacing:1px; margin:6px 0 24px;\n"
-                             "          text-shadow:1px 1px 0 rgba(255,255,255,.45); }\n"
-                             "  .contenu p { line-height:1.85; font-size:1.15rem; text-align:justify; }\n"
-                             "  .contenu > p:first-of-type::first-letter { float:left; font-family:'Cinzel', serif;\n"
-                             "          font-size:3.6rem; line-height:.8; color:#8b3a1d; padding:6px 10px 0 0; }\n"
-                             "  img { max-width:100%; border-radius:4px; display:block; margin:20px auto;\n"
-                             "        box-shadow:0 6px 18px rgba(0,0,0,.35); }\n"
-                             "  a { display:inline-block; margin:8px; padding:13px 26px;\n"
-                             "      background:linear-gradient(#9c6a3b, #7a4f29); color:#fff5e6;\n"
-                             "      text-decoration:none; border-radius:8px; font-family:'Cinzel',serif;\n"
-                             "      font-weight:600; letter-spacing:.5px; border:1px solid #5a3a1c;\n"
-                             "      box-shadow:0 4px 0 #4a3017, 0 6px 12px rgba(0,0,0,.4); transition:all .15s ease; }\n"
-                             "  a:hover { transform:translateY(-2px); box-shadow:0 6px 0 #4a3017, 0 10px 18px rgba(0,0,0,.45); }\n"
-                             "  a:active { transform:translateY(2px); box-shadow:0 1px 0 #4a3017; }\n"
-                             "</style>\n</head>\n<body>\n  <div class=\"page\">\n"
-                             "    <div class=\"ornement\">&#10022; &#10022; &#10022;</div>\n"
-                             "    <h1 class=\"titre\">%1</h1>\n"
-                             "    <div class=\"contenu\">\n%2\n    </div>\n  </div>\n</body>\n</html>\n")
-                             .arg(titre, corps);
+    const QString page = gabaritPage(titre, corpsDeHtml(ui->editeur->toHtml()));
 
     QFile fichier(chemin);
     if (!fichier.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -454,9 +766,147 @@ void MainWindow::exporterHtml()
     statusBar()->showMessage("Page web exportée : " + chemin, 3000);
 }
 
-// ---------------------------------------------------------------------------
-// Mise en forme
-// ---------------------------------------------------------------------------
+void MainWindow::exporterSite()
+{
+    sauvegarderPageCourante();
+
+    const QString dossier = QFileDialog::getExistingDirectory(this, "Choisir un dossier pour le site");
+    if (dossier.isEmpty())
+        return;
+
+    for (int i = 0; i < m_pages.size(); ++i) {
+        QString titre = m_pages[i].titre;
+        if (titre.isEmpty())
+            titre = "Page " + QString::number(i + 1);
+
+        QString corps = corpsDeHtml(m_pages[i].html);
+        corps += "\n<div style=\"text-align:center; margin-top:28px;\">"
+                 "<a href=\"index.html\">↩ Retour au sommaire</a></div>";
+
+        const QString page = gabaritPage(titre, corps);
+
+        QFile f(dossier + "/page" + QString::number(i + 1) + ".html");
+        if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream s(&f);
+            s << page;
+            f.close();
+        }
+    }
+
+    QString marqueurs;
+    for (int i = 0; i < m_pages.size(); ++i) {
+        QString titre = m_pages[i].titre;
+        if (titre.isEmpty())
+            titre = "Page " + QString::number(i + 1);
+        titre.replace("\"", "\\\"");
+
+        double lat = i * 6.5;
+        double lng = i * 12.0;
+
+        marqueurs += "    L.marker([" + QString::number(lat) + ", " + QString::number(lng) + "]).addTo(map)\n";
+        marqueurs += "      .bindPopup(\"<div class='bulle'><b>Page " + QString::number(i + 1) + "</b><br>"
+                     + titre + "<br><br>"
+                     + "<a href='page" + QString::number(i + 1) + ".html'>Entrer dans ce chapitre</a></div>\");\n";
+    }
+
+    QString sommaire;
+    for (int i = 0; i < m_pages.size(); ++i) {
+        QString titre = m_pages[i].titre;
+        if (titre.isEmpty())
+            titre = "Page " + QString::number(i + 1);
+        sommaire += "<li><a href=\"page" + QString::number(i + 1) + ".html\">" + titre + "</a></li>\n";
+    }
+
+    const QString modeleIndex = QStringLiteral(R"HTML(<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte de l'aventure</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 48px 20px;
+    background: radial-gradient(circle at 50% 0%, #3a3326, #1d1a14 70%);
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #fff5e6;
+    text-align: center;
+  }
+  h1 { font-family: 'Cinzel', serif; font-weight: 800; color: #f4ead3; margin-bottom: 4px; }
+  .description { color: #a07b46; font-style: italic; font-size: 1.2rem; margin-bottom: 24px; }
+  #map {
+    max-width: 900px;
+    height: 540px;
+    margin: 0 auto;
+    border-radius: 8px;
+    border: 2px solid #b89b6e;
+    box-shadow: 0 0 0 6px rgba(0,0,0,.25), 0 15px 40px rgba(0,0,0,.5);
+  }
+  .bulle { font-family: 'EB Garamond', serif; color: #2a2018; font-size: 1.1rem; }
+  .bulle a { font-family: 'Cinzel', serif; font-weight: bold; color: #9c6a3b; text-decoration: none; }
+  .bulle a:hover { text-decoration: underline; }
+  .demarrer {
+    display: inline-block;
+    margin: 26px 0 10px;
+    padding: 13px 30px;
+    background: linear-gradient(#9c6a3b, #7a4f29);
+    color: #fff5e6;
+    text-decoration: none;
+    border: 1px solid #5a3a1c;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    box-shadow: 0 4px 0 #4a3017, 0 6px 12px rgba(0,0,0,.4);
+  }
+  h2 { font-family: 'Cinzel', serif; color: #f4ead3; font-size: 1.3rem; margin-top: 30px; }
+  ol.sommaire { max-width: 440px; margin: 8px auto 0; text-align: left; line-height: 2; padding-left: 20px; }
+  ol.sommaire a { color: #f4ead3; }
+</style>
+</head>
+<body>
+  <h1>Chroniques de l'aventure</h1>
+  <p class="description">Carte des étapes du récit</p>
+  <div id="map"></div>
+
+  <div><a class="demarrer" href="page1.html">Commencer l'aventure</a></div>
+
+  <h2>Sommaire</h2>
+  <ol class="sommaire">
+%2
+  </ol>
+
+  <script>
+    var map = L.map('map').setView([10, 20], 3);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+%1
+  </script>
+</body>
+</html>
+)HTML");
+
+    const QString index = modeleIndex.arg(marqueurs, sommaire);
+    QFile fi(dossier + "/index.html");
+    if (fi.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream s(&fi);
+        s << index;
+        fi.close();
+    }
+
+    statusBar()->showMessage("Site exporté dans : " + dossier, 4000);
+    QMessageBox::information(this, "Export du site",
+                            "Site exporté !\nOuvre index.html dans ton navigateur.\n\n"
+                            "Astuce : pour que les liens marchent, mets comme cible "
+                            "« page2.html », « page3.html »… dans Insérer un lien.");
+}
 
 void MainWindow::choisirPolice()
 {
@@ -475,7 +925,10 @@ void MainWindow::choisirCouleur()
 
 void MainWindow::basculerGras()
 {
-    ui->editeur->setFontWeight(ui->actionGras->isChecked() ? QFont::Bold : QFont::Normal);
+    if (ui->actionGras->isChecked())
+        ui->editeur->setFontWeight(QFont::Bold);
+    else
+        ui->editeur->setFontWeight(QFont::Normal);
 }
 
 void MainWindow::basculerItalique()
@@ -494,10 +947,6 @@ void MainWindow::souligner()
 {
     ui->editeur->setFontUnderline(ui->actionSouligner->isChecked());
 }
-
-// ---------------------------------------------------------------------------
-// Insertion
-// ---------------------------------------------------------------------------
 
 void MainWindow::insererLien()
 {
@@ -533,10 +982,6 @@ void MainWindow::insererListe()
 {
     ui->editeur->textCursor().insertList(QTextListFormat::ListDisc);
 }
-
-// ---------------------------------------------------------------------------
-// Divers
-// ---------------------------------------------------------------------------
 
 void MainWindow::aPropos()
 {
@@ -589,8 +1034,10 @@ void MainWindow::definirFichierCourant(const QString &chemin)
 
 void MainWindow::majTitre()
 {
-    const QString nom = m_fichierCourant.isEmpty()
-    ? "Nouveau livre"
-    : QFileInfo(m_fichierCourant).fileName();
+    QString nom;
+    if (m_fichierCourant.isEmpty())
+        nom = "Nouveau livre";
+    else
+        nom = QFileInfo(m_fichierCourant).fileName();
     setWindowTitle(nom + "[*] - Éditeur LDVELH");
 }

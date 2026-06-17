@@ -7,20 +7,12 @@
 #include "condition.h"
 #include "etatjoueur.h"
 
-/**
- * Porte le texte du lien, la page cible, et des EFFETS appliqués au joueur
- * quand il emprunte ce choix (Niveau C) :
- *   - deltaPV   : variation de points de vie (négatif = fuite/blessure) ;
- *   - deltaXP   : gain d'expérience ;
- *   - objetGagne: objet ajouté à l'inventaire (vide = aucun).
- */
 class Choix
 {
 public:
     Choix() = default;
     Choix(const QString &texte, int pageCible);
 
-    // --- Accès ---
     QString texte() const;
     int pageCible() const;
     int deltaPV() const;
@@ -36,10 +28,8 @@ public:
     void setObjetGagne(const QString &o);
     void setCondition(const Condition &c);
 
-    // Le choix doit-il être proposé au joueur dans cet état ?
     bool estVisible(const EtatJoueur &etat) const;
 
-    // Applique les effets du choix à l'état du joueur.
     void appliquerEffets(EtatJoueur &etat) const;
 
     QJsonObject versJson() const;

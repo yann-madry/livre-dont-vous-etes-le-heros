@@ -13,8 +13,8 @@ class Page
 public:
     enum class Type {
         Normale,
-        Victoire,   // quête réussie
-        Defaite     // quête échouée
+        Victoire,
+        Defaite
     };
 
     Page() = default;

@@ -12,6 +12,9 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        fenetrerun.cpp
+        fenetrerun.h
+        fenetrerun.ui
 )
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SAE201Livre

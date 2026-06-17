@@ -19,6 +19,9 @@ public:
     int getIdPageDepart() const;
     void setIdPageDepart(int id);
 
+    void exporterEnSiteWeb(const QString &cheminDossier);
+    void genererIndexCartographique(const QString &cheminDossier);
+
     QMap<int,Page>& getAllPages();
 
 private :
@@ -27,4 +30,4 @@ private :
     int idPageDep;
 };
 
-#endif // LIVRE_H
+#endif

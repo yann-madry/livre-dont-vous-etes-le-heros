@@ -8,6 +8,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class QLabel;
+class QLineEdit;
 
 class MainWindow : public QMainWindow
 {
@@ -25,6 +26,7 @@ private slots:
     void ouvrir();
     bool enregistrer();
     bool enregistrerSous();
+    void exporterHtml();
     void imprimer();
     void choisirPolice();
     void choisirCouleur();
@@ -41,6 +43,7 @@ private slots:
     void basculerModeHtml();
 
 private:
+    void creerZoneCentrale();
     void definirIcones();
     void creerMenuEdition();
     void creerMenuInsertion();
@@ -57,6 +60,7 @@ private:
     Ui::MainWindow *ui;
     QString m_fichierCourant;
     QLabel *m_statut = nullptr;
+    QLineEdit *m_titre = nullptr;
 };
 
 #endif // MAINWINDOW_H

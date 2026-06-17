@@ -26,5 +26,9 @@
  	<file>Icones/police.png</file>
  	<file>Icones/surligne.png</file>
 	<file>Icones/couleur.png</file>
+	<file>Icones/zoom.png</file>
+	<file>Icones/photo.png</file>
+	<file>Icones/liste.png</file>
+	<file>Icones/date.png</file>
     </qresource>
 </RCC>

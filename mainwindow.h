@@ -2,13 +2,15 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QList>
+#include <QString>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class QLabel;
-class QLineEdit;
+class QListWidgetItem;
 
 class MainWindow : public QMainWindow
 {
@@ -22,46 +24,61 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
+    // Fichier
     void nouveau();
     void ouvrir();
     bool enregistrer();
     bool enregistrerSous();
     void exporterHtml();
     void imprimer();
+    void aPropos();
+
+    // Pages
+    void nouvellePage();
+    void supprimerPage();
+    void changerPage(QListWidgetItem *courant, QListWidgetItem *precedent);
+
+    // Mise en forme
     void choisirPolice();
     void choisirCouleur();
     void basculerGras();
     void basculerItalique();
     void surligner();
     void souligner();
+
+    // Insertion
     void insererLien();
     void insererImage();
     void insererListe();
-    void aPropos();
+
     void marquerModifie();
     void majStatistiques();
-    void basculerModeHtml();
 
 private:
-    void creerZoneCentrale();
-    void definirIcones();
-    void creerMenuEdition();
-    void creerMenuInsertion();
-    void creerMenuParagraphe();
-    void creerMenuOutils();
+    struct PageDoc {
+        QString titre;
+        QString html;
+    };
+
+    void creerMenusSupplementaires();
     void definirRaccourcis();
+
+    void rafraichirListePages();
+    void afficherPage(int index);
+    void sauvegarderPageCourante();
 
     bool confirmerAbandonModifs();
     bool ecrireFichier(const QString &chemin);
     void chargerFichier(const QString &chemin);
     void definirFichierCourant(const QString &chemin);
     void majTitre();
-    bool eventFilter(QObject *obj, QEvent *event) override;
 
     Ui::MainWindow *ui;
-    QString m_fichierCourant;
     QLabel *m_statut = nullptr;
-    QLineEdit *m_titre = nullptr;
+    QString m_fichierCourant;
+
+    QList<PageDoc> m_pages;
+    int m_pageCourante = -1;
 };
 
 #endif // MAINWINDOW_H

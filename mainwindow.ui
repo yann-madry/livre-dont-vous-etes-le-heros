@@ -6,17 +6,91 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>900</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="layoutCentral">
     <item>
-     <widget class="QTextEdit" name="editeur"/>
+     <widget class="QWidget" name="panneauGauche" native="true">
+      <property name="maximumSize">
+       <size>
+        <width>240</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="layoutGauche">
+       <item>
+        <widget class="QLabel" name="labelPages">
+         <property name="text">
+          <string>Pages du livre</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font-weight:bold; padding:4px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listePages"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="layoutBoutonsPages">
+         <item>
+          <widget class="QPushButton" name="btnNouvellePage">
+           <property name="text">
+            <string>+ Page</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnSupprimerPage">
+           <property name="text">
+            <string>− Page</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="panneauDroit" native="true">
+      <layout class="QVBoxLayout" name="layoutDroit">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="titre">
+         <property name="placeholderText">
+          <string>Titre de la page…</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLineEdit { font-size:22px; font-weight:bold; color:#5a3d23; padding:12px 16px; border:none; border-bottom:1px solid #ccc; background:#faf6ee; }</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="editeur"/>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -25,7 +99,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>900</width>
      <height>30</height>
     </rect>
    </property>
@@ -46,10 +120,10 @@
     </property>
     <addaction name="actionGras"/>
     <addaction name="actionItalique"/>
+    <addaction name="actionSouligner"/>
     <addaction name="actionCouleur"/>
     <addaction name="actionSurligner"/>
     <addaction name="actionPolice"/>
-    <addaction name="actionSouligner"/>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuEdition"/>
@@ -60,7 +134,7 @@
     <string>toolBar</string>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -69,50 +143,39 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionGras"/>
-   <addaction name="actionPolice"/>
    <addaction name="actionItalique"/>
    <addaction name="actionSouligner"/>
-   <addaction name="actionSurligner"/>
+   <addaction name="actionPolice"/>
    <addaction name="actionCouleur"/>
-   <addaction name="actionJustifi"/>
+   <addaction name="actionSurligner"/>
+   <addaction name="separator"/>
    <addaction name="actionAligner_a_gauche"/>
-   <addaction name="actionAligner_a_droite"/>
    <addaction name="actionCentrer"/>
+   <addaction name="actionAligner_a_droite"/>
+   <addaction name="actionJustifi"/>
   </widget>
   <action name="actionNouveau">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
    <property name="icon">
-    <iconset>
-     <normaloff>Icones/new.png</normaloff>
-     <normalon>Icones/new.png</normalon>Icones/new.png</iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/new.png</normaloff>:/Icones/new.png</iconset>
    </property>
    <property name="text">
-    <string>Nouveau</string>
-   </property>
-   <property name="iconText">
     <string>Nouveau</string>
    </property>
   </action>
   <action name="actionOuvrir">
    <property name="icon">
-    <iconset>
-     <normaloff>../images-2/open.png</normaloff>
-     <normalon>Icones/open.png</normalon>../images-2/open.png</iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/open.png</normaloff>:/Icones/open.png</iconset>
    </property>
    <property name="text">
-    <string>Ouvrir</string>
-   </property>
-   <property name="iconText">
     <string>Ouvrir</string>
    </property>
   </action>
   <action name="actionEnregistrer">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/save.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/save.png</normaloff>:/Icones/save.png</iconset>
    </property>
    <property name="text">
     <string>Enregistrer</string>
@@ -120,9 +183,8 @@
   </action>
   <action name="actionEnregistrerSous">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/save_as.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/save_as.png</normaloff>:/Icones/save_as.png</iconset>
    </property>
    <property name="text">
     <string>Enregistrer sous</string>
@@ -130,22 +192,17 @@
   </action>
   <action name="actionGras">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/bold.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/bold.png</normaloff>:/Icones/bold.png</iconset>
    </property>
    <property name="text">
-    <string>Gras</string>
-   </property>
-   <property name="iconText">
     <string>Gras</string>
    </property>
   </action>
   <action name="actionItalique">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/italic.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/italic.png</normaloff>:/Icones/italic.png</iconset>
    </property>
    <property name="text">
     <string>Italique</string>
@@ -171,9 +228,8 @@
   </action>
   <action name="actionAPropos">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/info.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/info.png</normaloff>:/Icones/info.png</iconset>
    </property>
    <property name="text">
     <string>A Propos</string>
@@ -181,9 +237,8 @@
   </action>
   <action name="actionQuitter">
    <property name="icon">
-    <iconset>
-     <normalon>Icones/exit.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/exit.png</normaloff>:/Icones/exit.png</iconset>
    </property>
    <property name="text">
     <string>Quitter</string>
@@ -191,30 +246,20 @@
   </action>
   <action name="actionPolice">
    <property name="icon">
-    <iconset>
-     <normaloff>Icones/police.png</normaloff>
-     <normalon>../images-2/font.png</normalon>Icones/police.png</iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/font.png</normaloff>:/Icones/font.png</iconset>
    </property>
    <property name="text">
     <string>Police</string>
    </property>
   </action>
   <action name="actionSouligner">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
    <property name="icon">
     <iconset resource="Ressources.qrc">
-     <normaloff>:/Icones/underline.png</normaloff>
-     <normalon>Icones/underline.png</normalon>:/Icones/underline.png</iconset>
+     <normaloff>:/Icones/underline.png</normaloff>:/Icones/underline.png</iconset>
    </property>
    <property name="text">
     <string>Souligner</string>
-   </property>
-  </action>
-  <action name="actionParagraphe">
-   <property name="text">
-    <string>Paragraphe</string>
    </property>
   </action>
   <action name="actionAligner_a_gauche">

@@ -9,6 +9,7 @@
 #include <QFileInfo>
 #include <QFontDialog>
 #include <QIcon>
+#include <QImage>
 #include <QInputDialog>
 #include <QLabel>
 #include <QMenu>
@@ -18,6 +19,7 @@
 #include <QRegularExpression>
 #include <QStatusBar>
 #include <QTextEdit>
+#include <QTextList>
 #include <QTextStream>
 #include <QToolBar>
 
@@ -31,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionItalique->setCheckable(true);
     ui->actionSouligner->setCheckable(true);
 
-    // Barre d'outils : icônes seules, sans le texte.
     ui->toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 
     connect(ui->actionNouveau,        &QAction::triggered, this, &MainWindow::nouveau);
@@ -59,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     definirIcones();
     creerMenuEdition();
+    creerMenuInsertion();
     creerMenuParagraphe();
     creerMenuOutils();
     definirRaccourcis();
@@ -102,12 +104,40 @@ void MainWindow::creerMenuEdition()
     ui->menuEdition->addSeparator();
     QAction *toutSel = ui->menuEdition->addAction("Tout sélectionner");
     connect(toutSel, &QAction::triggered, ui->editeur, &QTextEdit::selectAll);
+
     annuler->setShortcut(QKeySequence::Undo);
     retablir->setShortcut(QKeySequence::Redo);
     couper->setShortcut(QKeySequence::Cut);
     copier->setShortcut(QKeySequence::Copy);
     coller->setShortcut(QKeySequence::Paste);
     toutSel->setShortcut(QKeySequence::SelectAll);
+
+    ui->toolBar->addSeparator();
+    ui->toolBar->addAction(annuler);
+    ui->toolBar->addAction(retablir);
+    ui->toolBar->addAction(couper);
+    ui->toolBar->addAction(copier);
+    ui->toolBar->addAction(coller);
+}
+
+void MainWindow::creerMenuInsertion()
+{
+    QMenu *menu = menuBar()->addMenu("Insertion");
+
+    QAction *lien = menu->addAction("Insérer un lien...");
+    lien->setShortcut(QKeySequence("Ctrl+L"));
+    connect(lien, &QAction::triggered, this, &MainWindow::insererLien);
+
+    QAction *image = menu->addAction("Insérer une image...");
+    connect(image, &QAction::triggered, this, &MainWindow::insererImage);
+
+    QAction *liste = menu->addAction("Liste à puces");
+    connect(liste, &QAction::triggered, this, &MainWindow::insererListe);
+
+    QAction *date = menu->addAction("Insérer la date");
+    connect(date, &QAction::triggered, this, [this]() {
+        ui->editeur->insertPlainText(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm"));
+    });
 }
 
 void MainWindow::creerMenuParagraphe()
@@ -121,10 +151,6 @@ void MainWindow::creerMenuParagraphe()
     connect(droite, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignRight); });
     QAction *justifie = menu->addAction("Justifier");
     connect(justifie, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignJustify); });
-    menu->addSeparator();
-    QAction *lien = menu->addAction("Insérer un lien...");
-    lien->setShortcut(QKeySequence("Ctrl+L"));
-    connect(lien, &QAction::triggered, this, &MainWindow::insererLien);
 }
 
 void MainWindow::creerMenuOutils()
@@ -136,11 +162,6 @@ void MainWindow::creerMenuOutils()
     QAction *zoomMoins = menu->addAction("Zoom arrière");
     zoomMoins->setShortcut(QKeySequence::ZoomOut);
     connect(zoomMoins, &QAction::triggered, this, [this]() { ui->editeur->zoomOut(2); });
-    menu->addSeparator();
-    QAction *date = menu->addAction("Insérer la date");
-    connect(date, &QAction::triggered, this, [this]() {
-        ui->editeur->insertPlainText(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm"));
-    });
     menu->addSeparator();
     QAction *modeHtml = menu->addAction("Afficher le code HTML");
     modeHtml->setCheckable(true);
@@ -274,10 +295,32 @@ void MainWindow::insererLien()
     ui->editeur->insertHtml(QString("<a href=\"%1\">%2</a> ").arg(url, texte));
 }
 
+void MainWindow::insererImage()
+{
+    const QString chemin = QFileDialog::getOpenFileName(this, "Insérer une image", QString(),
+                                                        "Images (*.png *.jpg *.jpeg *.bmp *.gif)");
+    if (chemin.isEmpty())
+        return;
+
+    QImage image(chemin);
+    if (image.isNull()) {
+        QMessageBox::warning(this, "Erreur", "Image illisible :\n" + chemin);
+        return;
+    }
+    // insertImage intègre l'image directement dans le document.
+    ui->editeur->textCursor().insertImage(image);
+}
+
+void MainWindow::insererListe()
+{
+    // Transforme le paragraphe courant en liste à puces.
+    ui->editeur->textCursor().insertList(QTextListFormat::ListDisc);
+}
+
 void MainWindow::aPropos()
 {
     QMessageBox::about(this, "À propos",
-                       "Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveau A) en Qt Widgets.");
+                       "Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveaux A & B) en Qt Widgets.");
 }
 
 void MainWindow::marquerModifie()

@@ -33,6 +33,8 @@ private slots:
     void surligner();
     void souligner();
     void insererLien();
+    void insererImage();
+    void insererListe();
     void aPropos();
     void marquerModifie();
     void majStatistiques();
@@ -41,6 +43,7 @@ private slots:
 private:
     void definirIcones();
     void creerMenuEdition();
+    void creerMenuInsertion();
     void creerMenuParagraphe();
     void creerMenuOutils();
     void definirRaccourcis();
@@ -56,4 +59,4 @@ private:
     QLabel *m_statut = nullptr;
 };
 
-#endif
+#endif // MAINWINDOW_H

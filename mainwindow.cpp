@@ -26,6 +26,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->actionGras->setCheckable(true);
+    ui->actionItalique->setCheckable(true);
+    ui->actionSouligner->setCheckable(true);
 
     connect(ui->actionNouveau,        &QAction::triggered, this, &MainWindow::nouveau);
     connect(ui->actionOuvrir,         &QAction::triggered, this, &MainWindow::ouvrir);

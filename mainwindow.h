@@ -53,6 +53,7 @@ private:
     void chargerFichier(const QString &chemin);
     void definirFichierCourant(const QString &chemin);
     void majTitre();
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
     Ui::MainWindow *ui;
     QString m_fichierCourant;

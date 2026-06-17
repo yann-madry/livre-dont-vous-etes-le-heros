@@ -18,5 +18,13 @@
         <file>Icones/save_as.png</file>
         <file>Icones/save.png</file>
         <file>Icones/underline.png</file>
+ 	<file>Icones/centre.png</file>
+	 <file>Icones/droite.png</file>
+	 <file>Icones/gauche.png</file>
+ 	<file>Icones/justifier.png</file>
+ 	<file>Icones/lien.png</file>
+ 	<file>Icones/police.png</file>
+ 	<file>Icones/surligne.png</file>
+	<file>Icones/couleur.png</file>
     </qresource>
 </RCC>

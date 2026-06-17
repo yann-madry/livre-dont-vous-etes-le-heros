@@ -51,14 +51,24 @@
     <addaction name="actionPolice"/>
     <addaction name="actionSouligner"/>
    </widget>
-   <widget class="QMenu" name="menuAffichage">
+   <widget class="QMenu" name="menuParagraphe">
     <property name="title">
-     <string>Affichage</string>
+     <string>Paragraphe</string>
+    </property>
+    <addaction name="actionAligner_a_gauche"/>
+    <addaction name="actionAligner_a_droite"/>
+    <addaction name="actionCentrer"/>
+    <addaction name="actionJustifi"/>
+   </widget>
+   <widget class="QMenu" name="menuLien">
+    <property name="title">
+     <string>Lien</string>
     </property>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuEdition"/>
-   <addaction name="menuAffichage"/>
+   <addaction name="menuParagraphe"/>
+   <addaction name="menuLien"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -74,18 +84,16 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionNouveau"/>
-   <addaction name="actionOuvrir"/>
-   <addaction name="actionEnregistrer"/>
-   <addaction name="actionEnregistrerSous"/>
    <addaction name="actionGras"/>
-   <addaction name="actionItalique"/>
-   <addaction name="actionCouleur"/>
-   <addaction name="actionSurligner"/>
-   <addaction name="actionAPropos"/>
-   <addaction name="actionQuitter"/>
    <addaction name="actionPolice"/>
+   <addaction name="actionItalique"/>
    <addaction name="actionSouligner"/>
+   <addaction name="actionSurligner"/>
+   <addaction name="actionCouleur"/>
+   <addaction name="actionJustifi"/>
+   <addaction name="actionAligner_a_gauche"/>
+   <addaction name="actionAligner_a_droite"/>
+   <addaction name="actionCentrer"/>
   </widget>
   <action name="actionNouveau">
    <property name="checkable">
@@ -151,11 +159,19 @@
    </property>
   </action>
   <action name="actionCouleur">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/couleur.png</normaloff>:/Icones/couleur.png</iconset>
+   </property>
    <property name="text">
     <string>Couleur</string>
    </property>
   </action>
   <action name="actionSurligner">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/surligne.png</normaloff>:/Icones/surligne.png</iconset>
+   </property>
    <property name="text">
     <string>Surligner</string>
    </property>
@@ -177,14 +193,14 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Quitté</string>
+    <string>Quitter</string>
    </property>
   </action>
   <action name="actionPolice">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/font.png</normalon>
-    </iconset>
+     <normaloff>Icones/police.png</normaloff>
+     <normalon>../images-2/font.png</normalon>Icones/police.png</iconset>
    </property>
    <property name="text">
     <string>Police</string>
@@ -195,15 +211,58 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normalon>Icones/underline.png</normalon>
-    </iconset>
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/underline.png</normaloff>
+     <normalon>Icones/underline.png</normalon>:/Icones/underline.png</iconset>
    </property>
    <property name="text">
     <string>Souligner</string>
    </property>
   </action>
+  <action name="actionParagraphe">
+   <property name="text">
+    <string>Paragraphe</string>
+   </property>
+  </action>
+  <action name="actionAligner_a_gauche">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/gauche.png</normaloff>:/Icones/gauche.png</iconset>
+   </property>
+   <property name="text">
+    <string>Aligner a gauche</string>
+   </property>
+  </action>
+  <action name="actionAligner_a_droite">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/droite.png</normaloff>:/Icones/droite.png</iconset>
+   </property>
+   <property name="text">
+    <string>Aligner a droite</string>
+   </property>
+  </action>
+  <action name="actionCentrer">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/centre.png</normaloff>:/Icones/centre.png</iconset>
+   </property>
+   <property name="text">
+    <string>Centrer</string>
+   </property>
+  </action>
+  <action name="actionJustifi">
+   <property name="icon">
+    <iconset resource="Ressources.qrc">
+     <normaloff>:/Icones/justifier.png</normaloff>:/Icones/justifier.png</iconset>
+   </property>
+   <property name="text">
+    <string>Justifier</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="Ressources.qrc"/>
+ </resources>
  <connections/>
 </ui>

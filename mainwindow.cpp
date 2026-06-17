@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontDialog>
+#include <QInputDialog>
 #include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
@@ -23,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // On relie chaque action (créée dans Designer) à sa fonction.
     connect(ui->actionNouveau,        &QAction::triggered, this, &MainWindow::nouveau);
     connect(ui->actionOuvrir,         &QAction::triggered, this, &MainWindow::ouvrir);
     connect(ui->actionEnregistrer,    &QAction::triggered, this, &MainWindow::enregistrer);
@@ -31,20 +31,20 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionQuitter,        &QAction::triggered, this, &QWidget::close);
     connect(ui->actionGras,           &QAction::triggered, this, &MainWindow::basculerGras);
     connect(ui->actionItalique,       &QAction::triggered, this, &MainWindow::basculerItalique);
-    connect(ui->actionPolice,         &QAction::triggered, this, &MainWindow::choisirPolice);
-    connect(ui->actionCouleur,        &QAction::triggered, this, &MainWindow::choisirCouleur);
     connect(ui->actionSurligner,      &QAction::triggered, this, &MainWindow::surligner);
     connect(ui->actionSouligner,      &QAction::triggered, this, &MainWindow::souligner);
+    connect(ui->actionPolice,         &QAction::triggered, this, &MainWindow::choisirPolice);
+    connect(ui->actionCouleur,        &QAction::triggered, this, &MainWindow::choisirCouleur);
     connect(ui->actionAPropos,        &QAction::triggered, this, &MainWindow::aPropos);
 
     connect(ui->editeur, &QTextEdit::textChanged, this, &MainWindow::marquerModifie);
     connect(ui->editeur, &QTextEdit::textChanged, this, &MainWindow::majStatistiques);
 
-    // Étiquette de statistiques à droite de la barre d'état.
     m_statut = new QLabel(this);
     statusBar()->addPermanentWidget(m_statut);
 
     creerMenuEdition();
+    creerMenuParagraphe();
     creerMenuOutils();
     definirRaccourcis();
 
@@ -57,7 +57,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// Menu Édition : on relie aux fonctions intégrées du QTextEdit.
 void MainWindow::creerMenuEdition()
 {
     QAction *annuler = ui->menuEdition->addAction("Annuler");
@@ -82,35 +81,17 @@ void MainWindow::creerMenuEdition()
     QAction *toutSel = ui->menuEdition->addAction("Tout sélectionner");
     connect(toutSel, &QAction::triggered, ui->editeur, &QTextEdit::selectAll);
 
-    QAction *souligne = ui->menuEdition->addAction("Souligné");
-    souligne->setCheckable(true);
-    connect(souligne, &QAction::triggered, this, [this, souligne]() {
-        ui->editeur->setFontUnderline(souligne->isChecked());
-    });
-
     annuler->setShortcut(QKeySequence::Undo);
     retablir->setShortcut(QKeySequence::Redo);
     couper->setShortcut(QKeySequence::Cut);
     copier->setShortcut(QKeySequence::Copy);
     coller->setShortcut(QKeySequence::Paste);
     toutSel->setShortcut(QKeySequence::SelectAll);
-    souligne->setShortcut(QKeySequence::Underline);
 }
 
-// Menu Outils : zoom, alignement, insertion de la date.
-void MainWindow::creerMenuOutils()
+void MainWindow::creerMenuParagraphe()
 {
-    QMenu *menu = menuBar()->addMenu("Outils");
-
-    QAction *zoomPlus = menu->addAction("Zoom avant");
-    zoomPlus->setShortcut(QKeySequence::ZoomIn);
-    connect(zoomPlus, &QAction::triggered, this, [this]() { ui->editeur->zoomIn(2); });
-
-    QAction *zoomMoins = menu->addAction("Zoom arrière");
-    zoomMoins->setShortcut(QKeySequence::ZoomOut);
-    connect(zoomMoins, &QAction::triggered, this, [this]() { ui->editeur->zoomOut(2); });
-
-    menu->addSeparator();
+    QMenu *menu = menuBar()->addMenu("Paragraphe");
 
     QAction *gauche = menu->addAction("Aligner à gauche");
     connect(gauche, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignLeft); });
@@ -126,13 +107,48 @@ void MainWindow::creerMenuOutils()
 
     menu->addSeparator();
 
+    QAction *lien = menu->addAction("Insérer un lien...");
+    lien->setShortcut(QKeySequence("Ctrl+L"));
+    connect(lien, &QAction::triggered, this, &MainWindow::insererLien);
+}
+
+void MainWindow::creerMenuOutils()
+{
+    QMenu *menu = menuBar()->addMenu("Outils");
+
+    QAction *zoomPlus = menu->addAction("Zoom avant");
+    zoomPlus->setShortcut(QKeySequence::ZoomIn);
+    connect(zoomPlus, &QAction::triggered, this, [this]() { ui->editeur->zoomIn(2); });
+
+    QAction *zoomMoins = menu->addAction("Zoom arrière");
+    zoomMoins->setShortcut(QKeySequence::ZoomOut);
+    connect(zoomMoins, &QAction::triggered, this, [this]() { ui->editeur->zoomOut(2); });
+
+    menu->addSeparator();
+
     QAction *date = menu->addAction("Insérer la date");
     connect(date, &QAction::triggered, this, [this]() {
         ui->editeur->insertPlainText(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm"));
     });
+
+    menu->addSeparator();
+
+    QAction *modeHtml = menu->addAction("Afficher le code HTML");
+    modeHtml->setCheckable(true);
+    connect(modeHtml, &QAction::triggered, this, &MainWindow::basculerModeHtml);
 }
 
-// Raccourcis clavier des actions créées dans Designer.
+void MainWindow::basculerModeHtml()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    const bool modeHtml = action && action->isChecked();
+
+    if (modeHtml)
+        ui->editeur->setPlainText(ui->editeur->toHtml());
+    else
+        ui->editeur->setHtml(ui->editeur->toPlainText());
+}
+
 void MainWindow::definirRaccourcis()
 {
     ui->actionNouveau->setShortcut(QKeySequence::New);
@@ -142,6 +158,7 @@ void MainWindow::definirRaccourcis()
     ui->actionQuitter->setShortcut(QKeySequence::Quit);
     ui->actionGras->setShortcut(QKeySequence::Bold);
     ui->actionItalique->setShortcut(QKeySequence::Italic);
+    ui->actionSouligner->setShortcut(QKeySequence::Underline);
     ui->actionSurligner->setShortcut(QKeySequence("Ctrl+H"));
     ui->actionPolice->setShortcut(QKeySequence("Ctrl+T"));
 }
@@ -167,9 +184,7 @@ void MainWindow::ouvrir()
     if (!confirmerAbandonModifs())
         return;
 
-    const QString chemin = QFileDialog::getOpenFileName(
-        this, "Ouvrir un fichier", QString(),
-        "Texte et HTML (*.txt *.html);;Tous les fichiers (*)");
+    const QString chemin = QFileDialog::getOpenFileName(this, "Ouvrir un fichier", QString(), "Texte et HTML (*.txt *.html);;Tous les fichiers (*)");
 
     if (!chemin.isEmpty())
         chargerFichier(chemin);
@@ -184,9 +199,7 @@ bool MainWindow::enregistrer()
 
 bool MainWindow::enregistrerSous()
 {
-    const QString chemin = QFileDialog::getSaveFileName(
-        this, "Enregistrer sous", QString(),
-        "Texte (*.txt);;HTML (*.html)");
+    const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(), "Texte (*.txt);;HTML (*.html)");
 
     if (chemin.isEmpty())
         return false;
@@ -225,15 +238,30 @@ void MainWindow::surligner()
         ui->editeur->setTextBackgroundColor(couleur);
 }
 
-void MainWindow::souligner(bool underline)
+void MainWindow::souligner()
 {
-    ui->textEdit->setFontUnderline(underline);
+    ui->editeur->setFontUnderline(ui->actionSouligner->isChecked());
+}
+
+void MainWindow::insererLien()
+{
+    bool ok = false;
+    const QString url = QInputDialog::getText(this, "Insérer un lien","Adresse (URL ou page) :", QLineEdit::Normal, "", &ok);
+    if (!ok || url.isEmpty())
+        return;
+
+    QString texte = QInputDialog::getText(this, "Insérer un lien","Texte affiché :", QLineEdit::Normal, url, &ok);
+    if (!ok)
+        return;
+    if (texte.isEmpty())
+        texte = url;
+
+    ui->editeur->insertHtml(QString("<a href=\"%1\">%2</a> ").arg(url, texte));
 }
 
 void MainWindow::aPropos()
 {
-    QMessageBox::about(this, "À propos",
-                       "Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveau A) en Qt Widgets.");
+    QMessageBox::about(this, "À propos","Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveau A) en Qt Widgets.");
 }
 
 void MainWindow::marquerModifie()
@@ -254,9 +282,7 @@ bool MainWindow::confirmerAbandonModifs()
     if (!isWindowModified())
         return true;
 
-    const auto reponse = QMessageBox::warning(this, "Document modifié",
-                                              "Le document a été modifié.\nVoulez-vous enregistrer les changements ?",
-                                              QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    const auto reponse = QMessageBox::warning(this, "Document modifié","Le document a été modifié.\nVoulez-vous enregistrer les changements ?", QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
     if (reponse == QMessageBox::Save)
         return enregistrer();

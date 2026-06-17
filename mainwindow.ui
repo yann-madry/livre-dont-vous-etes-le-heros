@@ -85,7 +85,7 @@
   </widget>
   <action name="actionNouveau">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="icon">
     <iconset>
@@ -185,6 +185,9 @@
    </property>
   </action>
   <action name="actionSouligner">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Souligner</string>
    </property>

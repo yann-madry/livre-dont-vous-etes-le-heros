@@ -31,12 +31,15 @@ private slots:
     void basculerItalique();
     void surligner();
     void souligner();
+    void insererLien();
     void aPropos();
     void marquerModifie();
     void majStatistiques();
+    void basculerModeHtml();
 
 private:
     void creerMenuEdition();
+    void creerMenuParagraphe();
     void creerMenuOutils();
     void definirRaccourcis();
 

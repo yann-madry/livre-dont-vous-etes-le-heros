@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/Icones">
+        <file>Icones/bold.png</file>
+        <file>Icones/copy.png</file>
+        <file>Icones/create.png</file>
+        <file>Icones/cut.png</file>
+        <file>Icones/edit_redo.png</file>
+        <file>Icones/edit_undo.png</file>
+        <file>Icones/exit.png</file>
+        <file>Icones/font.png</file>
+        <file>Icones/info.png</file>
+        <file>Icones/italic.png</file>
+        <file>Icones/new.png</file>
+        <file>Icones/open.png</file>
+        <file>Icones/paste.png</file>
+        <file>Icones/pencil.png</file>
+        <file>Icones/print.png</file>
+        <file>Icones/save_as.png</file>
+        <file>Icones/save.png</file>
+        <file>Icones/underline.png</file>
+    </qresource>
+</RCC>

@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include <QAction>
 #include <QCloseEvent>
 #include <QColorDialog>
@@ -20,15 +19,20 @@
 #include <QStatusBar>
 #include <QTextEdit>
 #include <QTextStream>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     ui->actionGras->setCheckable(true);
     ui->actionItalique->setCheckable(true);
     ui->actionSouligner->setCheckable(true);
+
+    // Barre d'outils : icônes seules, sans le texte.
+    ui->toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 
     connect(ui->actionNouveau,        &QAction::triggered, this, &MainWindow::nouveau);
     connect(ui->actionOuvrir,         &QAction::triggered, this, &MainWindow::ouvrir);
@@ -49,7 +53,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_statut = new QLabel(this);
     statusBar()->addPermanentWidget(m_statut);
 
-    // Action Imprimer ajoutée au menu Fichier (en code).
     QAction *actImprimer = ui->menuFichier->addAction(QIcon(":/Icones/print.png"), "Imprimer...");
     actImprimer->setShortcut(QKeySequence::Print);
     connect(actImprimer, &QAction::triggered, this, &MainWindow::imprimer);
@@ -87,26 +90,18 @@ void MainWindow::creerMenuEdition()
 {
     QAction *annuler = ui->menuEdition->addAction(QIcon(":/Icones/edit_undo.png"), "Annuler");
     connect(annuler, &QAction::triggered, ui->editeur, &QTextEdit::undo);
-
     QAction *retablir = ui->menuEdition->addAction(QIcon(":/Icones/edit_redo.png"), "Rétablir");
     connect(retablir, &QAction::triggered, ui->editeur, &QTextEdit::redo);
-
     ui->menuEdition->addSeparator();
-
     QAction *couper = ui->menuEdition->addAction(QIcon(":/Icones/cut.png"), "Couper");
     connect(couper, &QAction::triggered, ui->editeur, &QTextEdit::cut);
-
     QAction *copier = ui->menuEdition->addAction(QIcon(":/Icones/copy.png"), "Copier");
     connect(copier, &QAction::triggered, ui->editeur, &QTextEdit::copy);
-
     QAction *coller = ui->menuEdition->addAction(QIcon(":/Icones/paste.png"), "Coller");
     connect(coller, &QAction::triggered, ui->editeur, &QTextEdit::paste);
-
     ui->menuEdition->addSeparator();
-
     QAction *toutSel = ui->menuEdition->addAction("Tout sélectionner");
     connect(toutSel, &QAction::triggered, ui->editeur, &QTextEdit::selectAll);
-
     annuler->setShortcut(QKeySequence::Undo);
     retablir->setShortcut(QKeySequence::Redo);
     couper->setShortcut(QKeySequence::Cut);
@@ -118,21 +113,15 @@ void MainWindow::creerMenuEdition()
 void MainWindow::creerMenuParagraphe()
 {
     QMenu *menu = menuBar()->addMenu("Paragraphe");
-
     QAction *gauche = menu->addAction("Aligner à gauche");
     connect(gauche, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignLeft); });
-
     QAction *centre = menu->addAction("Centrer");
     connect(centre, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignCenter); });
-
     QAction *droite = menu->addAction("Aligner à droite");
     connect(droite, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignRight); });
-
     QAction *justifie = menu->addAction("Justifier");
     connect(justifie, &QAction::triggered, this, [this]() { ui->editeur->setAlignment(Qt::AlignJustify); });
-
     menu->addSeparator();
-
     QAction *lien = menu->addAction("Insérer un lien...");
     lien->setShortcut(QKeySequence("Ctrl+L"));
     connect(lien, &QAction::triggered, this, &MainWindow::insererLien);
@@ -141,24 +130,18 @@ void MainWindow::creerMenuParagraphe()
 void MainWindow::creerMenuOutils()
 {
     QMenu *menu = menuBar()->addMenu("Outils");
-
     QAction *zoomPlus = menu->addAction("Zoom avant");
     zoomPlus->setShortcut(QKeySequence::ZoomIn);
     connect(zoomPlus, &QAction::triggered, this, [this]() { ui->editeur->zoomIn(2); });
-
     QAction *zoomMoins = menu->addAction("Zoom arrière");
     zoomMoins->setShortcut(QKeySequence::ZoomOut);
     connect(zoomMoins, &QAction::triggered, this, [this]() { ui->editeur->zoomOut(2); });
-
     menu->addSeparator();
-
     QAction *date = menu->addAction("Insérer la date");
     connect(date, &QAction::triggered, this, [this]() {
         ui->editeur->insertPlainText(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm"));
     });
-
     menu->addSeparator();
-
     QAction *modeHtml = menu->addAction("Afficher le code HTML");
     modeHtml->setCheckable(true);
     connect(modeHtml, &QAction::triggered, this, &MainWindow::basculerModeHtml);
@@ -168,7 +151,6 @@ void MainWindow::basculerModeHtml()
 {
     QAction *action = qobject_cast<QAction*>(sender());
     const bool modeHtml = action && action->isChecked();
-
     if (modeHtml)
         ui->editeur->setPlainText(ui->editeur->toHtml());
     else
@@ -209,10 +191,8 @@ void MainWindow::ouvrir()
 {
     if (!confirmerAbandonModifs())
         return;
-
     const QString chemin = QFileDialog::getOpenFileName(this, "Ouvrir un fichier", QString(),
                                                         "Texte et HTML (*.txt *.html);;Tous les fichiers (*)");
-
     if (!chemin.isEmpty())
         chargerFichier(chemin);
 }
@@ -228,7 +208,6 @@ bool MainWindow::enregistrerSous()
 {
     const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(),
                                                         "Texte (*.txt);;HTML (*.html)");
-
     if (chemin.isEmpty())
         return false;
     return ecrireFichier(chemin);
@@ -286,14 +265,12 @@ void MainWindow::insererLien()
                                               "Adresse (URL ou page) :", QLineEdit::Normal, "", &ok);
     if (!ok || url.isEmpty())
         return;
-
     QString texte = QInputDialog::getText(this, "Insérer un lien",
                                           "Texte affiché :", QLineEdit::Normal, url, &ok);
     if (!ok)
         return;
     if (texte.isEmpty())
         texte = url;
-
     ui->editeur->insertHtml(QString("<a href=\"%1\">%2</a> ").arg(url, texte));
 }
 
@@ -320,11 +297,9 @@ bool MainWindow::confirmerAbandonModifs()
 {
     if (!isWindowModified())
         return true;
-
     const auto reponse = QMessageBox::warning(this, "Document modifié",
                                               "Le document a été modifié.\nVoulez-vous enregistrer les changements ?",
                                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-
     if (reponse == QMessageBox::Save)
         return enregistrer();
     if (reponse == QMessageBox::Cancel)
@@ -339,14 +314,12 @@ bool MainWindow::ecrireFichier(const QString &chemin)
         QMessageBox::warning(this, "Erreur", "Impossible d'écrire le fichier :\n" + chemin);
         return false;
     }
-
     QTextStream flux(&fichier);
     if (chemin.endsWith(".html", Qt::CaseInsensitive))
         flux << ui->editeur->toHtml();
     else
         flux << ui->editeur->toPlainText();
     fichier.close();
-
     definirFichierCourant(chemin);
     statusBar()->showMessage("Enregistré : " + chemin, 3000);
     return true;
@@ -359,16 +332,13 @@ void MainWindow::chargerFichier(const QString &chemin)
         QMessageBox::warning(this, "Erreur", "Impossible d'ouvrir le fichier :\n" + chemin);
         return;
     }
-
     QTextStream flux(&fichier);
     const QString contenu = flux.readAll();
     fichier.close();
-
     if (chemin.endsWith(".html", Qt::CaseInsensitive))
         ui->editeur->setHtml(contenu);
     else
         ui->editeur->setPlainText(contenu);
-
     definirFichierCourant(chemin);
     statusBar()->showMessage("Ouvert : " + chemin, 3000);
 }

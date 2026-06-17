@@ -51,24 +51,8 @@
     <addaction name="actionPolice"/>
     <addaction name="actionSouligner"/>
    </widget>
-   <widget class="QMenu" name="menuParagraphe">
-    <property name="title">
-     <string>Paragraphe</string>
-    </property>
-    <addaction name="actionAligner_a_gauche"/>
-    <addaction name="actionAligner_a_droite"/>
-    <addaction name="actionCentrer"/>
-    <addaction name="actionJustifi"/>
-   </widget>
-   <widget class="QMenu" name="menuLien">
-    <property name="title">
-     <string>Lien</string>
-    </property>
-   </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuEdition"/>
-   <addaction name="menuParagraphe"/>
-   <addaction name="menuLien"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -107,6 +91,9 @@
    <property name="text">
     <string>Nouveau</string>
    </property>
+   <property name="iconText">
+    <string>Nouveau</string>
+   </property>
   </action>
   <action name="actionOuvrir">
    <property name="icon">
@@ -115,6 +102,9 @@
      <normalon>Icones/open.png</normalon>../images-2/open.png</iconset>
    </property>
    <property name="text">
+    <string>Ouvrir</string>
+   </property>
+   <property name="iconText">
     <string>Ouvrir</string>
    </property>
   </action>
@@ -145,6 +135,9 @@
     </iconset>
    </property>
    <property name="text">
+    <string>Gras</string>
+   </property>
+   <property name="iconText">
     <string>Gras</string>
    </property>
   </action>

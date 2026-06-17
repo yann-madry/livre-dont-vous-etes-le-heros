@@ -9,10 +9,13 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontDialog>
+#include <QIcon>
 #include <QInputDialog>
 #include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QRegularExpression>
 #include <QStatusBar>
 #include <QTextEdit>
@@ -43,6 +46,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_statut = new QLabel(this);
     statusBar()->addPermanentWidget(m_statut);
 
+    // Action Imprimer ajoutée au menu Fichier (en code).
+    QAction *actImprimer = ui->menuFichier->addAction(QIcon(":/Icones/print.png"), "Imprimer...");
+    actImprimer->setShortcut(QKeySequence::Print);
+    connect(actImprimer, &QAction::triggered, this, &MainWindow::imprimer);
+
+    definirIcones();
     creerMenuEdition();
     creerMenuParagraphe();
     creerMenuOutils();
@@ -57,23 +66,37 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::definirIcones()
+{
+    ui->actionNouveau->setIcon(QIcon(":/Icones/new.png"));
+    ui->actionOuvrir->setIcon(QIcon(":/Icones/open.png"));
+    ui->actionEnregistrer->setIcon(QIcon(":/Icones/save.png"));
+    ui->actionEnregistrerSous->setIcon(QIcon(":/Icones/save_as.png"));
+    ui->actionQuitter->setIcon(QIcon(":/Icones/exit.png"));
+    ui->actionGras->setIcon(QIcon(":/Icones/bold.png"));
+    ui->actionItalique->setIcon(QIcon(":/Icones/italic.png"));
+    ui->actionSouligner->setIcon(QIcon(":/Icones/underline.png"));
+    ui->actionPolice->setIcon(QIcon(":/Icones/font.png"));
+    ui->actionAPropos->setIcon(QIcon(":/Icones/info.png"));
+}
+
 void MainWindow::creerMenuEdition()
 {
-    QAction *annuler = ui->menuEdition->addAction("Annuler");
+    QAction *annuler = ui->menuEdition->addAction(QIcon(":/Icones/edit_undo.png"), "Annuler");
     connect(annuler, &QAction::triggered, ui->editeur, &QTextEdit::undo);
 
-    QAction *retablir = ui->menuEdition->addAction("Rétablir");
+    QAction *retablir = ui->menuEdition->addAction(QIcon(":/Icones/edit_redo.png"), "Rétablir");
     connect(retablir, &QAction::triggered, ui->editeur, &QTextEdit::redo);
 
     ui->menuEdition->addSeparator();
 
-    QAction *couper = ui->menuEdition->addAction("Couper");
+    QAction *couper = ui->menuEdition->addAction(QIcon(":/Icones/cut.png"), "Couper");
     connect(couper, &QAction::triggered, ui->editeur, &QTextEdit::cut);
 
-    QAction *copier = ui->menuEdition->addAction("Copier");
+    QAction *copier = ui->menuEdition->addAction(QIcon(":/Icones/copy.png"), "Copier");
     connect(copier, &QAction::triggered, ui->editeur, &QTextEdit::copy);
 
-    QAction *coller = ui->menuEdition->addAction("Coller");
+    QAction *coller = ui->menuEdition->addAction(QIcon(":/Icones/paste.png"), "Coller");
     connect(coller, &QAction::triggered, ui->editeur, &QTextEdit::paste);
 
     ui->menuEdition->addSeparator();
@@ -184,7 +207,8 @@ void MainWindow::ouvrir()
     if (!confirmerAbandonModifs())
         return;
 
-    const QString chemin = QFileDialog::getOpenFileName(this, "Ouvrir un fichier", QString(), "Texte et HTML (*.txt *.html);;Tous les fichiers (*)");
+    const QString chemin = QFileDialog::getOpenFileName(this, "Ouvrir un fichier", QString(),
+                                                        "Texte et HTML (*.txt *.html);;Tous les fichiers (*)");
 
     if (!chemin.isEmpty())
         chargerFichier(chemin);
@@ -199,11 +223,20 @@ bool MainWindow::enregistrer()
 
 bool MainWindow::enregistrerSous()
 {
-    const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(), "Texte (*.txt);;HTML (*.html)");
+    const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(),
+                                                        "Texte (*.txt);;HTML (*.html)");
 
     if (chemin.isEmpty())
         return false;
     return ecrireFichier(chemin);
+}
+
+void MainWindow::imprimer()
+{
+    QPrinter imprimante;
+    QPrintDialog dialogue(&imprimante, this);
+    if (dialogue.exec() == QDialog::Accepted)
+        ui->editeur->print(&imprimante);
 }
 
 void MainWindow::choisirPolice()
@@ -246,11 +279,13 @@ void MainWindow::souligner()
 void MainWindow::insererLien()
 {
     bool ok = false;
-    const QString url = QInputDialog::getText(this, "Insérer un lien","Adresse (URL ou page) :", QLineEdit::Normal, "", &ok);
+    const QString url = QInputDialog::getText(this, "Insérer un lien",
+                                              "Adresse (URL ou page) :", QLineEdit::Normal, "", &ok);
     if (!ok || url.isEmpty())
         return;
 
-    QString texte = QInputDialog::getText(this, "Insérer un lien","Texte affiché :", QLineEdit::Normal, url, &ok);
+    QString texte = QInputDialog::getText(this, "Insérer un lien",
+                                          "Texte affiché :", QLineEdit::Normal, url, &ok);
     if (!ok)
         return;
     if (texte.isEmpty())
@@ -261,7 +296,8 @@ void MainWindow::insererLien()
 
 void MainWindow::aPropos()
 {
-    QMessageBox::about(this, "À propos","Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveau A) en Qt Widgets.");
+    QMessageBox::about(this, "À propos",
+                       "Éditeur LDVELH — SAÉ 2.01\nBase 'Notepad' (Niveau A) en Qt Widgets.");
 }
 
 void MainWindow::marquerModifie()
@@ -282,7 +318,9 @@ bool MainWindow::confirmerAbandonModifs()
     if (!isWindowModified())
         return true;
 
-    const auto reponse = QMessageBox::warning(this, "Document modifié","Le document a été modifié.\nVoulez-vous enregistrer les changements ?", QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    const auto reponse = QMessageBox::warning(this, "Document modifié",
+                                              "Le document a été modifié.\nVoulez-vous enregistrer les changements ?",
+                                              QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
     if (reponse == QMessageBox::Save)
         return enregistrer();

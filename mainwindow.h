@@ -25,6 +25,7 @@ private slots:
     void ouvrir();
     bool enregistrer();
     bool enregistrerSous();
+    void imprimer();
     void choisirPolice();
     void choisirCouleur();
     void basculerGras();
@@ -38,6 +39,7 @@ private slots:
     void basculerModeHtml();
 
 private:
+    void definirIcones();
     void creerMenuEdition();
     void creerMenuParagraphe();
     void creerMenuOutils();

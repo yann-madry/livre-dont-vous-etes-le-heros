@@ -65,6 +65,9 @@
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -82,6 +85,7 @@
    <addaction name="actionAPropos"/>
    <addaction name="actionQuitter"/>
    <addaction name="actionPolice"/>
+   <addaction name="actionSouligner"/>
   </widget>
   <action name="actionNouveau">
    <property name="checkable">
@@ -89,7 +93,8 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../images-2/new.png</normaloff>../images-2/new.png</iconset>
+     <normaloff>Icones/new.png</normaloff>
+     <normalon>Icones/new.png</normalon>Icones/new.png</iconset>
    </property>
    <property name="text">
     <string>Nouveau</string>
@@ -98,7 +103,8 @@
   <action name="actionOuvrir">
    <property name="icon">
     <iconset>
-     <normaloff>../images-2/open.png</normaloff>../images-2/open.png</iconset>
+     <normaloff>../images-2/open.png</normaloff>
+     <normalon>Icones/open.png</normalon>../images-2/open.png</iconset>
    </property>
    <property name="text">
     <string>Ouvrir</string>
@@ -107,7 +113,7 @@
   <action name="actionEnregistrer">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/save.png</normalon>
+     <normalon>Icones/save.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -117,7 +123,7 @@
   <action name="actionEnregistrerSous">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/save_as.png</normalon>
+     <normalon>Icones/save_as.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -127,7 +133,7 @@
   <action name="actionGras">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/bold.png</normalon>
+     <normalon>Icones/bold.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -137,7 +143,7 @@
   <action name="actionItalique">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/italic.png</normalon>
+     <normalon>Icones/italic.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -157,7 +163,7 @@
   <action name="actionAPropos">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/info.png</normalon>
+     <normalon>Icones/info.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -167,7 +173,7 @@
   <action name="actionQuitter">
    <property name="icon">
     <iconset>
-     <normalon>../images-2/exit.png</normalon>
+     <normalon>Icones/exit.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -187,6 +193,11 @@
   <action name="actionSouligner">
    <property name="checkable">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normalon>Icones/underline.png</normalon>
+    </iconset>
    </property>
    <property name="text">
     <string>Souligner</string>

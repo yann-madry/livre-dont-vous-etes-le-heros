@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTextEdit" name="editeur"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFichier">
+    <property name="title">
+     <string>Fichier</string>
+    </property>
+    <addaction name="actionNouveau"/>
+    <addaction name="actionOuvrir"/>
+    <addaction name="actionEnregistrer"/>
+    <addaction name="actionEnregistrerSous"/>
+    <addaction name="actionAPropos"/>
+    <addaction name="actionQuitter"/>
+   </widget>
+   <widget class="QMenu" name="menuEdition">
+    <property name="title">
+     <string>Edition</string>
+    </property>
+    <addaction name="actionGras"/>
+    <addaction name="actionItalique"/>
+    <addaction name="actionCouleur"/>
+    <addaction name="actionSurligner"/>
+    <addaction name="actionPolice"/>
+    <addaction name="actionSouligner"/>
+   </widget>
+   <widget class="QMenu" name="menuAffichage">
+    <property name="title">
+     <string>Affichage</string>
+    </property>
+   </widget>
+   <addaction name="menuFichier"/>
+   <addaction name="menuEdition"/>
+   <addaction name="menuAffichage"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNouveau"/>
+   <addaction name="actionOuvrir"/>
+   <addaction name="actionEnregistrer"/>
+   <addaction name="actionEnregistrerSous"/>
+   <addaction name="actionGras"/>
+   <addaction name="actionItalique"/>
+   <addaction name="actionCouleur"/>
+   <addaction name="actionSurligner"/>
+   <addaction name="actionAPropos"/>
+   <addaction name="actionQuitter"/>
+   <addaction name="actionPolice"/>
+  </widget>
+  <action name="actionNouveau">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>../images-2/new.png</normaloff>../images-2/new.png</iconset>
+   </property>
+   <property name="text">
+    <string>Nouveau</string>
+   </property>
+  </action>
+  <action name="actionOuvrir">
+   <property name="icon">
+    <iconset>
+     <normaloff>../images-2/open.png</normaloff>../images-2/open.png</iconset>
+   </property>
+   <property name="text">
+    <string>Ouvrir</string>
+   </property>
+  </action>
+  <action name="actionEnregistrer">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/save.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Enregistrer</string>
+   </property>
+  </action>
+  <action name="actionEnregistrerSous">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/save_as.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Enregistrer sous</string>
+   </property>
+  </action>
+  <action name="actionGras">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/bold.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Gras</string>
+   </property>
+  </action>
+  <action name="actionItalique">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/italic.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Italique</string>
+   </property>
+  </action>
+  <action name="actionCouleur">
+   <property name="text">
+    <string>Couleur</string>
+   </property>
+  </action>
+  <action name="actionSurligner">
+   <property name="text">
+    <string>Surligner</string>
+   </property>
+  </action>
+  <action name="actionAPropos">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/info.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>A Propos</string>
+   </property>
+  </action>
+  <action name="actionQuitter">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/exit.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Quitté</string>
+   </property>
+  </action>
+  <action name="actionPolice">
+   <property name="icon">
+    <iconset>
+     <normalon>../images-2/font.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Police</string>
+   </property>
+  </action>
+  <action name="actionSouligner">
+   <property name="text">
+    <string>Souligner</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

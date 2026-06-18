@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte de l'aventure</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 48px 20px;
+    background: radial-gradient(circle at 50% 0%, #3a3326, #1d1a14 70%);
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #fff5e6;
+    text-align: center;
+  }
+  h1 { font-family: 'Cinzel', serif; font-weight: 800; color: #f4ead3; margin-bottom: 4px; }
+  .description { color: #a07b46; font-style: italic; font-size: 1.2rem; margin-bottom: 24px; }
+  #map {
+    max-width: 900px;
+    height: 540px;
+    margin: 0 auto;
+    border-radius: 8px;
+    border: 2px solid #b89b6e;
+    box-shadow: 0 0 0 6px rgba(0,0,0,.25), 0 15px 40px rgba(0,0,0,.5);
+  }
+  .bulle { font-family: 'EB Garamond', serif; color: #2a2018; font-size: 1.1rem; }
+  .bulle a { font-family: 'Cinzel', serif; font-weight: bold; color: #9c6a3b; text-decoration: none; }
+  .bulle a:hover { text-decoration: underline; }
+  .demarrer {
+    display: inline-block;
+    margin: 26px 0 10px;
+    padding: 13px 30px;
+    background: linear-gradient(#9c6a3b, #7a4f29);
+    color: #fff5e6;
+    text-decoration: none;
+    border: 1px solid #5a3a1c;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    box-shadow: 0 4px 0 #4a3017, 0 6px 12px rgba(0,0,0,.4);
+  }
+  h2 { font-family: 'Cinzel', serif; color: #f4ead3; font-size: 1.3rem; margin-top: 30px; }
+  ol.sommaire { max-width: 440px; margin: 8px auto 0; text-align: left; line-height: 2; padding-left: 20px; }
+  ol.sommaire a { color: #f4ead3; }
+</style>
+</head>
+<body>
+  <h1>La Caverne Maudite</h1>
+  <p class="description">Carte des étapes du récit</p>
+  <div id="map"></div>
+
+  <div><a class="demarrer" href="page1.html">Commencer l'aventure</a></div>
+
+  <h2>Sommaire</h2>
+  <ol class="sommaire">
+<li><a href="page1.html">Le seuil de la caverne</a></li>
+<li><a href="page2.html">La salle aux gobelins</a></li>
+<li><a href="page3.html">La riviere souterraine</a></li>
+<li><a href="page4.html">Le pont de pierre</a></li>
+<li><a href="page5.html">Le piege a pieux</a></li>
+<li><a href="page6.html">L'antre du dragon</a></li>
+<li><a href="page7.html">Victoire !</a></li>
+<li><a href="page8.html">Defaite</a></li>
+
+  </ol>
+
+  <script>
+    localStorage.removeItem("ldvelh");
+    var map = L.map('map').setView([10, 20], 3);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    L.marker([0, 0]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 1</b><br>Le seuil de la caverne<br><br><a href='page1.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([6.5, 12]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 2</b><br>La salle aux gobelins<br><br><a href='page2.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([13, 24]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 3</b><br>La riviere souterraine<br><br><a href='page3.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([19.5, 36]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 4</b><br>Le pont de pierre<br><br><a href='page4.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([26, 48]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 5</b><br>Le piege a pieux<br><br><a href='page5.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([32.5, 60]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 6</b><br>L'antre du dragon<br><br><a href='page6.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([39, 72]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 7</b><br>Victoire !<br><br><a href='page7.html'>Entrer dans ce chapitre</a></div>");
+    L.marker([45.5, 84]).addTo(map)
+      .bindPopup("<div class='bulle'><b>Page 8</b><br>Defaite<br><br><a href='page8.html'>Entrer dans ce chapitre</a></div>");
+
+  </script>
+</body>
+</html>

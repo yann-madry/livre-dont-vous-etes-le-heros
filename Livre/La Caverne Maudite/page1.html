@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le seuil de la caverne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 48px 20px;
+    background: radial-gradient(circle at 50% 0%, #3a3326, #1d1a14 70%);
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #33271a;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: auto;
+    padding: 56px 60px;
+    background: #efe2c4;
+    background-image: radial-gradient(rgba(120,90,40,.07) 1px, transparent 1px);
+    background-size: 13px 13px;
+    border: 1px solid #b89b6e;
+    border-radius: 5px;
+    box-shadow: 0 0 0 7px rgba(0,0,0,.28), 0 18px 44px rgba(0,0,0,.6);
+    position: relative;
+    animation: apparition .6s ease;
+  }
+
+  .page::before {
+    content: '';
+    position: absolute;
+    inset: 11px;
+    border: 1px solid rgba(138,99,52,.4);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  @keyframes apparition {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; }
+  }
+
+  .ornement {
+    text-align: center;
+    color: #a07b46;
+    letter-spacing: 6px;
+    font-size: 14px;
+  }
+
+  h1.titre {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    text-align: center;
+    color: #5a3d23;
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+    margin: 6px 0 24px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,.45);
+  }
+
+  .contenu p {
+    line-height: 1.85;
+    font-size: 1.15rem;
+    text-align: justify;
+  }
+
+  .contenu > p:first-of-type::first-letter {
+    float: left;
+    font-family: 'Cinzel', serif;
+    font-size: 3.6rem;
+    line-height: .8;
+    color: #8b3a1d;
+    padding: 6px 10px 0 0;
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 20px auto;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  }
+
+  a {
+    display: inline-block;
+    margin: 8px;
+    padding: 13px 26px;
+    background: linear-gradient(#9c6a3b, #7a4f29);
+    color: #fff5e6;
+    text-decoration: none;
+    border: 1px solid #5a3a1c;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: .5px;
+    box-shadow: 0 4px 0 #4a3017, 0 6px 12px rgba(0,0,0,.4);
+    transition: all .15s ease;
+  }
+
+  a:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 #4a3017, 0 10px 18px rgba(0,0,0,.45); }
+  a:active { transform: translateY(2px);  box-shadow: 0 1px 0 #4a3017; }
+
+  .hud {
+    background: #2a2018;
+    color: #f4ead3;
+    font-family: 'Cinzel', serif;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 22px;
+    font-size: 0.95rem;
+  }
+
+  .hud a {
+    display: inline;
+    margin: 0 0 0 12px;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #d9a441;
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ornement">&#10022; &#10022; &#10022;</div>
+    <h1 class="titre">Le seuil de la caverne</h1>
+    <div class="contenu">
+<div class="hud">PV : <span id="hud-pv"></span> · XP : <span id="hud-xp"></span> · Objets : <span id="hud-objets"></span><a href="index.html">Recommencer</a></div>
+
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Une caverne beante s'ouvre devant vous, l'air sent le soufre. Votre torche crepite faiblement dans l'obscurite.</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Que decidez-vous ?</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page2.html#pv=-5"><span style=" text-decoration: underline; color:#094fd1;">Entrer dans la caverne sombre</span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page3.html"><span style=" text-decoration: underline; color:#094fd1;">Contourner par la riviere</span></a></p>
+<div style="text-align:center; margin-top:18px;"><a class="lien-retour" href="index.html">← Retour</a></div>
+<div style="text-align:center; margin-top:12px;"><a href="index.html">↩ Retour au sommaire</a></div>
+<script>
+function chargerEtat() {
+  var brut = localStorage.getItem("ldvelh");
+  if (brut === null) {
+    return { pv: 100, xp: 0, objets: [], pages: [], historique: [] };
+  }
+  return JSON.parse(brut);
+}
+function sauverEtat(etat) {
+  localStorage.setItem("ldvelh", JSON.stringify(etat));
+}
+function definirValeursDepart(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "pv") {
+      etat.pv = parseInt(valeur);
+    } else if (cle === "xp") {
+      etat.xp = parseInt(valeur);
+    } else if (cle === "objet") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        etat.objets.push(valeur);
+      }
+    }
+  }
+}
+function afficherHud(etat) {
+  document.getElementById("hud-pv").textContent = etat.pv;
+  document.getElementById("hud-xp").textContent = etat.xp;
+  if (etat.objets.length === 0) {
+    document.getElementById("hud-objets").textContent = "aucun";
+  } else {
+    document.getElementById("hud-objets").textContent = etat.objets.join(", ");
+  }
+}
+function lireFragment(href) {
+  var diese = href.indexOf("#");
+  if (diese === -1) {
+    return "";
+  }
+  return href.substring(diese + 1);
+}
+function baseHref(href) {
+  var diese = href.indexOf("#");
+  if (diese === -1) {
+    return href;
+  }
+  return href.substring(0, diese);
+}
+function appliquerEffets(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "pv") {
+      etat.pv += parseInt(valeur);
+    } else if (cle === "xp") {
+      etat.xp += parseInt(valeur);
+    } else if (cle === "objet") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        etat.objets.push(valeur);
+      }
+    }
+  }
+}
+function conditionRemplie(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "requiert") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        return false;
+      }
+    }
+    if (cle === "requiertpage") {
+      if (etat.pages.indexOf(parseInt(valeur)) === -1) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+window.addEventListener("DOMContentLoaded", function() {
+  var pageActuelle = 1;
+  var initJeu = "pv=30;xp=0;objet=Torche";
+  var effetPage = "";
+  var brut = localStorage.getItem("ldvelh");
+  var etat;
+  if (brut === null) {
+    etat = { pv: 100, xp: 0, objets: [], pages: [], historique: [] };
+    if (initJeu !== "") {
+      definirValeursDepart(etat, initJeu);
+    }
+  } else {
+    etat = JSON.parse(brut);
+  }
+  if (etat.pages.indexOf(pageActuelle) === -1) {
+    if (effetPage !== "") {
+      appliquerEffets(etat, effetPage);
+    }
+    etat.pages.push(pageActuelle);
+  }
+  sauverEtat(etat);
+  if (etat.pv <= 0) {
+    alert("Vous avez succombé. Retour au début de l'aventure.");
+    localStorage.removeItem("ldvelh");
+    window.location.href = "index.html";
+    return;
+  }
+  afficherHud(etat);
+  var liens = document.querySelectorAll(".contenu a");
+  for (var i = 0; i < liens.length; i++) {
+    var lien = liens[i];
+    if (lien.classList.contains("lien-retour")) {
+      if (etat.historique.length === 0) {
+        lien.style.display = "none";
+      } else {
+        lien.addEventListener("click", function(e) {
+          e.preventDefault();
+          var et = chargerEtat();
+          if (et.historique.length === 0) {
+            window.location.href = "index.html";
+            return;
+          }
+          var snap = et.historique.pop();
+          et.pv = snap.pv;
+          et.xp = snap.xp;
+          et.objets = snap.objets;
+          et.pages = snap.pages;
+          sauverEtat(et);
+          window.location.href = "page" + snap.page + ".html";
+        });
+      }
+      continue;
+    }
+    var href = lien.getAttribute("href");
+    if (baseHref(href) === "index.html") {
+      continue;
+    }
+    var fragment = lireFragment(href);
+    if (fragment !== "" && conditionRemplie(etat, fragment) === false) {
+      lien.style.display = "none";
+    } else {
+      lien.addEventListener("click", function(e) {
+        e.preventDefault();
+        var h = this.getAttribute("href");
+        var et = chargerEtat();
+        et.historique.push({ page: pageActuelle, pv: et.pv, xp: et.xp, objets: et.objets.slice(), pages: et.pages.slice() });
+        var frag = lireFragment(h);
+        if (frag !== "") {
+          appliquerEffets(et, frag);
+        }
+        sauverEtat(et);
+        if (et.pv <= 0) {
+          alert("Vous avez succombé. Retour au début de l'aventure.");
+          localStorage.removeItem("ldvelh");
+          window.location.href = "index.html";
+        } else {
+          window.location.href = baseHref(h);
+        }
+      });
+    }
+  }
+});
+</script>
+
+    </div>
+  </div>
+</body>
+</html>

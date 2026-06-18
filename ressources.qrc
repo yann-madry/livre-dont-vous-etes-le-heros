@@ -19,8 +19,8 @@
         <file>Icones/save.png</file>
         <file>Icones/underline.png</file>
  	<file>Icones/centre.png</file>
-	 <file>Icones/droite.png</file>
-	 <file>Icones/gauche.png</file>
+	<file>Icones/droite.png</file>
+	<file>Icones/gauche.png</file>
  	<file>Icones/justifier.png</file>
  	<file>Icones/lien.png</file>
  	<file>Icones/police.png</file>
@@ -30,5 +30,6 @@
 	<file>Icones/photo.png</file>
 	<file>Icones/liste.png</file>
 	<file>Icones/date.png</file>
+	<file>Icones/logo.png</file>
     </qresource>
 </RCC>

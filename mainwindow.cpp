@@ -46,6 +46,7 @@
 #include <QTextList>
 #include <QTextStream>
 #include <QToolBar>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -164,6 +165,8 @@ MainWindow::MainWindow(QWidget *parent)
     rafraichirListePages();
     ui->listePages->setCurrentRow(0);
     definirFichierCourant("");
+
+    this->setWindowIcon(QIcon(":/Icones/logo.png"));
 }
 
 MainWindow::~MainWindow()

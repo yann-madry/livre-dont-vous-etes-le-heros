@@ -194,6 +194,11 @@ void MainWindow::creerMenusSupplementaires()
     connect(actApercu, &QAction::triggered, this, &MainWindow::apercuImpression);
     ui->menuFichier->insertAction(ui->actionAPropos, actApercu);
 
+    //test
+    QAction *actVerifier = new QAction("Vérifier le livre...", this);
+    connect(actVerifier, &QAction::triggered, this, &MainWindow::verifierCoherenceLivre);
+    ui->menuFichier->insertAction(ui->actionAPropos, actVerifier);
+
     ui->menuFichier->insertSeparator(ui->actionAPropos);
 
     ui->menuEdition->addSeparator();
@@ -1426,4 +1431,92 @@ void MainWindow::majTitre()
     else
         nom = QFileInfo(m_fichierCourant).fileName();
     setWindowTitle(nom + "[*] - Éditeur LDVELH");
+}
+
+void MainWindow::verifierCoherenceLivre()
+{
+    sauvegarderPageCourante();
+
+    if (m_pages.isEmpty()) {
+        QMessageBox::warning(this, "Analyse impossible", "Le livre ne contient aucune page.");
+        return;
+    }
+
+    Livre livreAventure = construireLivre();
+
+    QVector<int> pagesVisitees;
+    QVector<int> impassesOubliees;
+    QVector<int> pileAVisiter;
+
+    pileAVisiter.append(1);
+
+    while (!pileAVisiter.isEmpty()) {
+        int idActuel = pileAVisiter.takeLast();
+
+        if (pagesVisitees.contains(idActuel)) {
+            continue;
+        }
+
+        pagesVisitees.append(idActuel);
+
+        if (!livreAventure.contientPage(idActuel)) {
+            continue;
+        }
+
+        Page pageActuelle = livreAventure.getPage(idActuel);
+        QVector<Choix> tousLesChoix = pageActuelle.choix();
+
+        bool cEstUneFinDeLHistoire = (pageActuelle.type() == Page::Type::Victoire ||pageActuelle.type() == Page::Type::Defaite);
+
+        if (tousLesChoix.isEmpty() && !cEstUneFinDeLHistoire) {
+            impassesOubliees.append(idActuel);
+        }
+
+        for (int i = 0; i < tousLesChoix.size(); ++i) {
+            int idCible = tousLesChoix[i].pageCible();
+
+            if (idCible > 0) {
+                pileAVisiter.append(idCible);
+            }
+        }
+    }
+
+    bool toutEstNickel = true;
+    QString listeOrphelines = "";
+    QString listeImpasses = "";
+
+    for (int i = 0; i < m_pages.size(); ++i) {
+        int idPageDuLivre = i + 1;
+
+        if (!pagesVisitees.contains(idPageDuLivre)) {
+            QString titrePage = m_pages[i].titre.isEmpty() ? "(sans titre)" : m_pages[i].titre;
+            listeOrphelines += "- Page " + QString::number(idPageDuLivre) + " : " + titrePage + "\n";
+            toutEstNickel = false;
+        }
+    }
+
+    for (int i = 0; i < impassesOubliees.size(); ++i) {
+        int idImpasse = impassesOubliees[i];
+        QString titrePage = m_pages[idImpasse - 1].titre.isEmpty() ? "(sans titre)" : m_pages[idImpasse - 1].titre;
+        listeImpasses += "- Page " + QString::number(idImpasse) + " : " + titrePage + "\n";
+        toutEstNickel = false;
+    }
+
+    if (toutEstNickel) {
+        QMessageBox::information(this, "Vérification terminée",
+                                 "Aucun problème détecté. Toutes les pages sont accessibles "
+                                 "depuis le début et l'histoire ne contient aucun cul-de-sac oublié.");
+    } else {
+        QString messageAlerte = "Des incohérences logiques ont été détectées dans le livre :\n\n";
+
+        if (!listeOrphelines.isEmpty()) {
+            messageAlerte += "Pages inaccessibles (aucun choix ne mène à elles) :\n" + listeOrphelines + "\n";
+        }
+
+        if (!listeImpasses.isEmpty()) {
+            messageAlerte += "Culs-de-sac (l'histoire s'arrête sans choix et sans être une fin de partie) :\n" + listeImpasses;
+        }
+
+        QMessageBox::warning(this, "Analyse du livre", messageAlerte);
+    }
 }

@@ -40,6 +40,7 @@ private slots:
     void apercuImpression();
     void sauvegardeAuto();
     void aPropos();
+    void verifierCoherenceLivre();
 
     void nouvellePage();
     void supprimerPage();

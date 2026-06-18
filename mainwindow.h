@@ -3,8 +3,10 @@
 
 #include <QMainWindow>
 #include <QList>
+#include <QMap>
 #include <QString>
 #include "livre.h"
+#include "fenetrerun.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -13,7 +15,6 @@ QT_END_NAMESPACE
 class QLabel;
 class QListWidgetItem;
 class QTimer;
-class FenetreRun;
 
 class MainWindow : public QMainWindow
 {
@@ -64,9 +65,14 @@ private:
     struct PageDoc {
         QString titre;
         QString html;
+        int effetPv = 0;
+        int effetXp = 0;
+        QString effetObjet;
     };
 
     Livre construireLivre() const;
+    QMap<int, EffetEntree> construireEffets() const;
+    QString nomFichierSain() const;
 
     void creerMenusSupplementaires();
     void definirRaccourcis();
@@ -92,6 +98,11 @@ private:
     int m_pageCourante = -1;
     QTimer *m_minuterie = nullptr;
     FenetreRun *m_vueRun = nullptr;
+
+    int m_departPv = 100;
+    int m_departXp = 0;
+    QString m_departObjets;
+    QString m_nomLivre = "Mon livre";
 };
 
 #endif

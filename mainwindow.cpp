@@ -10,6 +10,7 @@
 #include <QColorDialog>
 #include <QDateTime>
 #include <QDesktopServices>
+#include <QDir>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMouseEvent>
@@ -37,6 +38,8 @@
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QRegularExpression>
+#include <QSpinBox>
+#include <QSpinBox>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTextEdit>
@@ -97,6 +100,25 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    connect(ui->spinPv, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int v) {
+        if (m_pageCourante >= 0 && m_pageCourante < m_pages.size()) {
+            m_pages[m_pageCourante].effetPv = v;
+            marquerModifie();
+        }
+    });
+    connect(ui->spinXp, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int v) {
+        if (m_pageCourante >= 0 && m_pageCourante < m_pages.size()) {
+            m_pages[m_pageCourante].effetXp = v;
+            marquerModifie();
+        }
+    });
+    connect(ui->objetRecu, &QLineEdit::textChanged, this, [this](const QString &t) {
+        if (m_pageCourante >= 0 && m_pageCourante < m_pages.size()) {
+            m_pages[m_pageCourante].effetObjet = t;
+            marquerModifie();
+        }
+    });
+
     m_statut = new QLabel(this);
     statusBar()->addPermanentWidget(m_statut);
 
@@ -116,6 +138,27 @@ MainWindow::MainWindow(QWidget *parent)
     m_vueRun = new FenetreRun(this);
     ui->layoutLecture->addWidget(m_vueRun);
     connect(ui->ongletsPrincipaux, &QTabWidget::currentChanged, this, &MainWindow::changerOnglet);
+
+    ui->nomLivre->setText(m_nomLivre);
+    ui->spinPvDepart->setValue(m_departPv);
+    ui->spinXpDepart->setValue(m_departXp);
+    ui->objetsDepart->setText(m_departObjets);
+    connect(ui->nomLivre, &QLineEdit::textChanged, this, [this](const QString &t) {
+        m_nomLivre = t;
+        marquerModifie();
+    });
+    connect(ui->spinPvDepart, &QSpinBox::valueChanged, this, [this](int v) {
+        m_departPv = v;
+        marquerModifie();
+    });
+    connect(ui->spinXpDepart, &QSpinBox::valueChanged, this, [this](int v) {
+        m_departXp = v;
+        marquerModifie();
+    });
+    connect(ui->objetsDepart, &QLineEdit::textChanged, this, [this](const QString &t) {
+        m_departObjets = t;
+        marquerModifie();
+    });
 
     m_pages.append({ "Page de départ", QString() });
     rafraichirListePages();
@@ -211,6 +254,22 @@ void MainWindow::creerMenusSupplementaires()
     });
 }
 
+QMap<int, EffetEntree> MainWindow::construireEffets() const
+{
+    QMap<int, EffetEntree> effets;
+    for (int i = 0; i < m_pages.size(); ++i) {
+        EffetEntree e;
+        e.pv = m_pages[i].effetPv;
+        e.xp = m_pages[i].effetXp;
+        QStringList objets = m_pages[i].effetObjet.split(',', Qt::SkipEmptyParts);
+        for (int k = 0; k < objets.size(); ++k) {
+            e.objets.append(objets[k].trimmed());
+        }
+        effets.insert(i + 1, e);
+    }
+    return effets;
+}
+
 Livre MainWindow::construireLivre() const
 {
     Livre livre;
@@ -293,7 +352,12 @@ void MainWindow::changerOnglet(int index)
 {
     if (ui->ongletsPrincipaux->widget(index) == ui->ongletLecture) {
         sauvegarderPageCourante();
-        m_vueRun->chargerLivre(construireLivre());
+        QStringList objets;
+        QStringList brut = m_departObjets.split(',', Qt::SkipEmptyParts);
+        for (int i = 0; i < brut.size(); ++i) {
+            objets.append(brut[i].trimmed());
+        }
+        m_vueRun->chargerLivre(construireLivre(), m_departPv, m_departXp, objets, construireEffets());
     }
 }
 
@@ -343,6 +407,16 @@ void MainWindow::afficherPage(int index)
     ui->titre->blockSignals(false);
     ui->editeur->blockSignals(false);
 
+    ui->spinPv->blockSignals(true);
+    ui->spinXp->blockSignals(true);
+    ui->objetRecu->blockSignals(true);
+    ui->spinPv->setValue(m_pages[index].effetPv);
+    ui->spinXp->setValue(m_pages[index].effetXp);
+    ui->objetRecu->setText(m_pages[index].effetObjet);
+    ui->spinPv->blockSignals(false);
+    ui->spinXp->blockSignals(false);
+    ui->objetRecu->blockSignals(false);
+
     majStatistiques();
 }
 
@@ -352,6 +426,9 @@ void MainWindow::sauvegarderPageCourante()
         return;
     m_pages[m_pageCourante].titre = ui->titre->text();
     m_pages[m_pageCourante].html = ui->editeur->toHtml();
+    m_pages[m_pageCourante].effetPv = ui->spinPv->value();
+    m_pages[m_pageCourante].effetXp = ui->spinXp->value();
+    m_pages[m_pageCourante].effetObjet = ui->objetRecu->text();
 }
 
 void MainWindow::changerPage(QListWidgetItem *courant, QListWidgetItem *precedent)
@@ -361,6 +438,9 @@ void MainWindow::changerPage(QListWidgetItem *courant, QListWidgetItem *preceden
         if (idx >= 0 && idx < m_pages.size()) {
             m_pages[idx].titre = ui->titre->text();
             m_pages[idx].html = ui->editeur->toHtml();
+            m_pages[idx].effetPv = ui->spinPv->value();
+            m_pages[idx].effetXp = ui->spinXp->value();
+            m_pages[idx].effetObjet = ui->objetRecu->text();
         }
     }
     if (courant)
@@ -398,6 +478,16 @@ void MainWindow::nouveau()
     m_pages.append({ "Page de départ", QString() });
     rafraichirListePages();
     ui->listePages->setCurrentRow(0);
+
+    m_nomLivre = "Mon livre";
+    m_departPv = 100;
+    m_departXp = 0;
+    m_departObjets.clear();
+    ui->nomLivre->setText(m_nomLivre);
+    ui->spinPvDepart->setValue(m_departPv);
+    ui->spinXpDepart->setValue(m_departXp);
+    ui->objetsDepart->clear();
+
     definirFichierCourant("");
 }
 
@@ -418,13 +508,31 @@ bool MainWindow::enregistrer()
     return ecrireFichier(m_fichierCourant);
 }
 
+QString MainWindow::nomFichierSain() const
+{
+    QString nom = m_nomLivre.trimmed();
+    if (nom.isEmpty())
+        nom = "livre";
+    QString resultat;
+    for (int i = 0; i < nom.size(); ++i) {
+        QChar c = nom[i];
+        if (c.isLetterOrNumber() || c == ' ' || c == '-' || c == '_')
+            resultat += c;
+        else
+            resultat += '_';
+    }
+    return resultat;
+}
+
 bool MainWindow::enregistrerSous()
 {
-    const QString chemin = QFileDialog::getSaveFileName(this, "Enregistrer sous", QString(),
-        "Livre LDVELH (*.json);;Page HTML (*.html);;Texte (*.txt)");
-    if (chemin.isEmpty())
+    const QString parent = QFileDialog::getExistingDirectory(this, "Choisir où enregistrer le livre");
+    if (parent.isEmpty())
         return false;
-    return ecrireFichier(chemin);
+    const QString nom = nomFichierSain();
+    const QString dossier = parent + "/" + nom;
+    QDir().mkpath(dossier);
+    return ecrireFichier(dossier + "/" + nom + ".json");
 }
 
 bool MainWindow::ecrireFichier(const QString &chemin)
@@ -448,10 +556,19 @@ bool MainWindow::ecrireFichier(const QString &chemin)
             QJsonObject o;
             o["titre"] = m_pages[i].titre;
             o["html"]  = m_pages[i].html;
+            o["effetPv"] = m_pages[i].effetPv;
+            o["effetXp"] = m_pages[i].effetXp;
+            o["effetObjet"] = m_pages[i].effetObjet;
             tableau.append(o);
         }
+        QJsonObject depart;
+        depart["nom"] = m_nomLivre;
+        depart["pv"] = m_departPv;
+        depart["xp"] = m_departXp;
+        depart["objets"] = m_departObjets;
         QJsonObject racine;
         racine["pages"] = tableau;
+        racine["depart"] = depart;
         flux << QString::fromUtf8(QJsonDocument(racine).toJson(QJsonDocument::Indented));
     }
     fichier.close();
@@ -480,10 +597,33 @@ void MainWindow::chargerFichier(const QString &chemin)
             PageDoc p;
             p.titre = o["titre"].toString();
             p.html = o["html"].toString();
+            p.effetPv = o["effetPv"].toInt(0);
+            p.effetXp = o["effetXp"].toInt(0);
+            p.effetObjet = o["effetObjet"].toString();
             m_pages.append(p);
         }
         if (m_pages.isEmpty())
             m_pages.append({ "Page de départ", QString() });
+
+        QJsonObject depart = doc.object()["depart"].toObject();
+        m_nomLivre = depart["nom"].toString();
+        if (m_nomLivre.isEmpty())
+            m_nomLivre = "Mon livre";
+        m_departPv = depart["pv"].toInt(100);
+        m_departXp = depart["xp"].toInt(0);
+        m_departObjets = depart["objets"].toString();
+        ui->nomLivre->blockSignals(true);
+        ui->spinPvDepart->blockSignals(true);
+        ui->spinXpDepart->blockSignals(true);
+        ui->objetsDepart->blockSignals(true);
+        ui->nomLivre->setText(m_nomLivre);
+        ui->spinPvDepart->setValue(m_departPv);
+        ui->spinXpDepart->setValue(m_departXp);
+        ui->objetsDepart->setText(m_departObjets);
+        ui->nomLivre->blockSignals(false);
+        ui->spinPvDepart->blockSignals(false);
+        ui->spinXpDepart->blockSignals(false);
+        ui->objetsDepart->blockSignals(false);
     } else {
         PageDoc p;
         p.titre = QFileInfo(chemin).completeBaseName();
@@ -721,6 +861,28 @@ QString MainWindow::gabaritPage(const QString &titre, const QString &corps) cons
 
   a:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 #4a3017, 0 10px 18px rgba(0,0,0,.45); }
   a:active { transform: translateY(2px);  box-shadow: 0 1px 0 #4a3017; }
+
+  .hud {
+    background: #2a2018;
+    color: #f4ead3;
+    font-family: 'Cinzel', serif;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 22px;
+    font-size: 0.95rem;
+  }
+
+  .hud a {
+    display: inline;
+    margin: 0 0 0 12px;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #d9a441;
+    font-size: 0.85rem;
+  }
 </style>
 </head>
 <body>
@@ -770,18 +932,197 @@ void MainWindow::exporterSite()
 {
     sauvegarderPageCourante();
 
-    const QString dossier = QFileDialog::getExistingDirectory(this, "Choisir un dossier pour le site");
-    if (dossier.isEmpty())
+    const QString parent = QFileDialog::getExistingDirectory(this, "Choisir un dossier pour le site");
+    if (parent.isEmpty())
         return;
+    const QString dossier = parent + "/" + nomFichierSain();
+    QDir().mkpath(dossier);
+
+    const QString scriptJeu = QStringLiteral(R"JS(
+<script>
+function chargerEtat() {
+  var brut = localStorage.getItem("ldvelh");
+  if (brut === null) {
+    return { pv: 100, xp: 0, objets: [], pages: [] };
+  }
+  return JSON.parse(brut);
+}
+function sauverEtat(etat) {
+  localStorage.setItem("ldvelh", JSON.stringify(etat));
+}
+function definirValeursDepart(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "pv") {
+      etat.pv = parseInt(valeur);
+    } else if (cle === "xp") {
+      etat.xp = parseInt(valeur);
+    } else if (cle === "objet") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        etat.objets.push(valeur);
+      }
+    }
+  }
+}
+function afficherHud(etat) {
+  document.getElementById("hud-pv").textContent = etat.pv;
+  document.getElementById("hud-xp").textContent = etat.xp;
+  if (etat.objets.length === 0) {
+    document.getElementById("hud-objets").textContent = "aucun";
+  } else {
+    document.getElementById("hud-objets").textContent = etat.objets.join(", ");
+  }
+}
+function lireFragment(href) {
+  var diese = href.indexOf("#");
+  if (diese === -1) {
+    return "";
+  }
+  return href.substring(diese + 1);
+}
+function baseHref(href) {
+  var diese = href.indexOf("#");
+  if (diese === -1) {
+    return href;
+  }
+  return href.substring(0, diese);
+}
+function appliquerEffets(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "pv") {
+      etat.pv += parseInt(valeur);
+    } else if (cle === "xp") {
+      etat.xp += parseInt(valeur);
+    } else if (cle === "objet") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        etat.objets.push(valeur);
+      }
+    }
+  }
+}
+function conditionRemplie(etat, fragment) {
+  var parties = fragment.split(";");
+  for (var i = 0; i < parties.length; i++) {
+    var kv = parties[i].split("=");
+    if (kv.length !== 2) {
+      continue;
+    }
+    var cle = kv[0].trim();
+    var valeur = kv[1].trim();
+    if (cle === "requiert") {
+      if (etat.objets.indexOf(valeur) === -1) {
+        return false;
+      }
+    }
+    if (cle === "requiertpage") {
+      if (etat.pages.indexOf(parseInt(valeur)) === -1) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+window.addEventListener("DOMContentLoaded", function() {
+  var pageActuelle = %1;
+  var initJeu = "%2";
+  var effetPage = "%3";
+  var brut = localStorage.getItem("ldvelh");
+  var etat;
+  if (brut === null) {
+    etat = { pv: 100, xp: 0, objets: [], pages: [] };
+    if (initJeu !== "") {
+      definirValeursDepart(etat, initJeu);
+    }
+  } else {
+    etat = JSON.parse(brut);
+  }
+  if (etat.pages.indexOf(pageActuelle) === -1) {
+    if (effetPage !== "") {
+      appliquerEffets(etat, effetPage);
+    }
+    etat.pages.push(pageActuelle);
+  }
+  sauverEtat(etat);
+  if (etat.pv <= 0) {
+    alert("Vous avez succombé. Retour au début de l'aventure.");
+    localStorage.removeItem("ldvelh");
+    window.location.href = "index.html";
+    return;
+  }
+  afficherHud(etat);
+  var liens = document.querySelectorAll(".contenu a");
+  for (var i = 0; i < liens.length; i++) {
+    var fragment = lireFragment(liens[i].getAttribute("href"));
+    if (fragment !== "" && conditionRemplie(etat, fragment) === false) {
+      liens[i].style.display = "none";
+    } else {
+      liens[i].addEventListener("click", function(e) {
+        e.preventDefault();
+        var h = this.getAttribute("href");
+        var et = chargerEtat();
+        var frag = lireFragment(h);
+        if (frag !== "") {
+          appliquerEffets(et, frag);
+        }
+        sauverEtat(et);
+        if (et.pv <= 0) {
+          alert("Vous avez succombé. Retour au début de l'aventure.");
+          localStorage.removeItem("ldvelh");
+          window.location.href = "index.html";
+        } else {
+          window.location.href = baseHref(h);
+        }
+      });
+    }
+  }
+});
+</script>
+)JS");
 
     for (int i = 0; i < m_pages.size(); ++i) {
         QString titre = m_pages[i].titre;
         if (titre.isEmpty())
             titre = "Page " + QString::number(i + 1);
 
-        QString corps = corpsDeHtml(m_pages[i].html);
+        QString initStr;
+        if (i == 0) {
+            initStr = "pv=" + QString::number(m_departPv) + ";xp=" + QString::number(m_departXp);
+            QStringList objets = m_departObjets.split(',', Qt::SkipEmptyParts);
+            for (int k = 0; k < objets.size(); ++k) {
+                initStr += ";objet=" + objets[k].trimmed();
+            }
+        }
+
+        QString effetStr;
+        if (i != 0) {
+            effetStr = "pv=" + QString::number(m_pages[i].effetPv)
+                       + ";xp=" + QString::number(m_pages[i].effetXp);
+            QStringList objetsEffet = m_pages[i].effetObjet.split(',', Qt::SkipEmptyParts);
+            for (int k = 0; k < objetsEffet.size(); ++k) {
+                effetStr += ";objet=" + objetsEffet[k].trimmed();
+            }
+        }
+
+        QString corps = "<div class=\"hud\">PV : <span id=\"hud-pv\"></span> · XP : <span id=\"hud-xp\"></span>"
+                        " · Objets : <span id=\"hud-objets\"></span>"
+                        "<a href=\"index.html\">Recommencer</a></div>\n";
+        corps += corpsDeHtml(m_pages[i].html);
         corps += "\n<div style=\"text-align:center; margin-top:28px;\">"
                  "<a href=\"index.html\">↩ Retour au sommaire</a></div>";
+        corps += scriptJeu.arg(i + 1).arg(initStr).arg(effetStr);
 
         const QString page = gabaritPage(titre, corps);
 
@@ -870,7 +1211,7 @@ void MainWindow::exporterSite()
 </style>
 </head>
 <body>
-  <h1>Chroniques de l'aventure</h1>
+  <h1>$TITRELIVRE$</h1>
   <p class="description">Carte des étapes du récit</p>
   <div id="map"></div>
 
@@ -882,6 +1223,7 @@ void MainWindow::exporterSite()
   </ol>
 
   <script>
+    localStorage.removeItem("ldvelh");
     var map = L.map('map').setView([10, 20], 3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -893,7 +1235,11 @@ void MainWindow::exporterSite()
 </html>
 )HTML");
 
-    const QString index = modeleIndex.arg(marqueurs, sommaire);
+    QString index = modeleIndex.arg(marqueurs, sommaire);
+    QString nomAffiche = m_nomLivre.trimmed();
+    if (nomAffiche.isEmpty())
+        nomAffiche = "Mon livre";
+    index.replace("$TITRELIVRE$", nomAffiche.toHtmlEscaped());
     QFile fi(dossier + "/index.html");
     if (fi.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream s(&fi);

@@ -11,6 +11,8 @@ FenetreRun::FenetreRun(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::FenetreRun)
     , m_pageCourante(-1)
+    , m_departPv(100)
+    , m_departXp(0)
 {
     ui->setupUi(this);
     ui->zoneTexte->setReadOnly(true);
@@ -24,12 +26,25 @@ FenetreRun::~FenetreRun()
     delete ui;
 }
 
-void FenetreRun::chargerLivre(const Livre &livre)
+void FenetreRun::chargerLivre(const Livre &livre, int departPv, int departXp,
+                              const QStringList &departObjets, const QMap<int, EffetEntree> &effets)
 {
     m_livre = livre;
+    m_departPv = departPv;
+    m_departXp = departXp;
+    m_departObjets = departObjets;
+    m_effets = effets;
+    demarrer();
+}
+
+void FenetreRun::demarrer()
+{
     m_etat = EtatJoueur();
-    m_etat.pv = 100;
-    m_etat.xp = 0;
+    m_etat.pv = m_departPv;
+    m_etat.xp = m_departXp;
+    for (int i = 0; i < m_departObjets.size(); ++i) {
+        m_etat.objets.insert(m_departObjets[i]);
+    }
     afficherPage(m_livre.getIdPageDepart());
 }
 
@@ -43,6 +58,15 @@ void FenetreRun::afficherPage(int id)
     }
 
     Page &page = m_livre.getPage(id);
+
+    if (!m_etat.pagesVisitees.contains(id) && m_effets.contains(id) && id != m_livre.getIdPageDepart()) {
+        EffetEntree e = m_effets.value(id);
+        m_etat.pv += e.pv;
+        m_etat.xp += e.xp;
+        for (int k = 0; k < e.objets.size(); ++k) {
+            m_etat.objets.insert(e.objets[k]);
+        }
+    }
     m_etat.pagesVisitees.insert(id);
 
     ui->etiquetteTitre->setText(page.titre());
@@ -50,23 +74,24 @@ void FenetreRun::afficherPage(int id)
     QString texte = page.texteHtml();
     QRegularExpression reLien("<a\\b[^>]*>.*?</a>",
                               QRegularExpression::DotMatchesEverythingOption
-                              | QRegularExpression::CaseInsensitiveOption);
+                                  | QRegularExpression::CaseInsensitiveOption);
     texte.remove(reLien);
     ui->zoneTexte->setHtml(texte);
 
     majEtat();
     viderChoix();
 
-    if (page.estFin()) {
-        if (page.type() == Page::Type::Victoire)
-            afficherFin("Victoire ! Vous avez triomphé.");
-        else
-            afficherFin("Défaite… Votre aventure s'achève ici.");
+    if (m_etat.estMort()) {
+        afficherFin("Vous avez succombé. Fin de l'aventure.");
         return;
     }
 
-    if (m_etat.estMort()) {
-        afficherFin("Vous avez succombé. Fin de l'aventure.");
+    if (page.estFin()) {
+        if (page.type() == Page::Type::Victoire) {
+            afficherFin("Victoire ! Vous avez triomphé.");
+        } else {
+            afficherFin("Défaite… Votre aventure s'achève ici.");
+        }
         return;
     }
 
@@ -84,8 +109,9 @@ void FenetreRun::afficherPage(int id)
         }
     }
 
-    if (nbVisibles == 0)
+    if (nbVisibles == 0) {
         afficherFin("Fin de l'aventure.");
+    }
 }
 
 void FenetreRun::allerVersPage(const Choix &choix)
@@ -104,10 +130,11 @@ void FenetreRun::allerVersPage(const Choix &choix)
 void FenetreRun::majEtat()
 {
     QString objets;
-    if (m_etat.objets.isEmpty())
+    if (m_etat.objets.isEmpty()) {
         objets = "aucun";
-    else
+    } else {
         objets = QStringList(m_etat.objets.values()).join(", ");
+    }
 
     ui->etiquetteEtat->setText(
         QString("PV : %1   |   XP : %2   |   Objets : %3")
@@ -118,8 +145,9 @@ void FenetreRun::viderChoix()
 {
     QLayoutItem *item;
     while ((item = ui->layoutChoix->takeAt(0)) != nullptr) {
-        if (item->widget() != nullptr)
+        if (item->widget() != nullptr) {
             item->widget()->deleteLater();
+        }
         delete item;
     }
 }
@@ -136,8 +164,5 @@ void FenetreRun::afficherFin(const QString &message)
 
 void FenetreRun::recommencer()
 {
-    m_etat = EtatJoueur();
-    m_etat.pv = 100;
-    m_etat.xp = 0;
-    afficherPage(m_livre.getIdPageDepart());
+    demarrer();
 }

@@ -943,7 +943,7 @@ void MainWindow::exporterSite()
 function chargerEtat() {
   var brut = localStorage.getItem("ldvelh");
   if (brut === null) {
-    return { pv: 100, xp: 0, objets: [], pages: [] };
+    return { pv: 100, xp: 0, objets: [], pages: [], historique: [] };
   }
   return JSON.parse(brut);
 }
@@ -1042,7 +1042,7 @@ window.addEventListener("DOMContentLoaded", function() {
   var brut = localStorage.getItem("ldvelh");
   var etat;
   if (brut === null) {
-    etat = { pv: 100, xp: 0, objets: [], pages: [] };
+    etat = { pv: 100, xp: 0, objets: [], pages: [], historique: [] };
     if (initJeu !== "") {
       definirValeursDepart(etat, initJeu);
     }
@@ -1065,14 +1065,42 @@ window.addEventListener("DOMContentLoaded", function() {
   afficherHud(etat);
   var liens = document.querySelectorAll(".contenu a");
   for (var i = 0; i < liens.length; i++) {
-    var fragment = lireFragment(liens[i].getAttribute("href"));
+    var lien = liens[i];
+    if (lien.classList.contains("lien-retour")) {
+      if (etat.historique.length === 0) {
+        lien.style.display = "none";
+      } else {
+        lien.addEventListener("click", function(e) {
+          e.preventDefault();
+          var et = chargerEtat();
+          if (et.historique.length === 0) {
+            window.location.href = "index.html";
+            return;
+          }
+          var snap = et.historique.pop();
+          et.pv = snap.pv;
+          et.xp = snap.xp;
+          et.objets = snap.objets;
+          et.pages = snap.pages;
+          sauverEtat(et);
+          window.location.href = "page" + snap.page + ".html";
+        });
+      }
+      continue;
+    }
+    var href = lien.getAttribute("href");
+    if (baseHref(href) === "index.html") {
+      continue;
+    }
+    var fragment = lireFragment(href);
     if (fragment !== "" && conditionRemplie(etat, fragment) === false) {
-      liens[i].style.display = "none";
+      lien.style.display = "none";
     } else {
-      liens[i].addEventListener("click", function(e) {
+      lien.addEventListener("click", function(e) {
         e.preventDefault();
         var h = this.getAttribute("href");
         var et = chargerEtat();
+        et.historique.push({ page: pageActuelle, pv: et.pv, xp: et.xp, objets: et.objets.slice(), pages: et.pages.slice() });
         var frag = lireFragment(h);
         if (frag !== "") {
           appliquerEffets(et, frag);
@@ -1120,7 +1148,19 @@ window.addEventListener("DOMContentLoaded", function() {
                         " · Objets : <span id=\"hud-objets\"></span>"
                         "<a href=\"index.html\">Recommencer</a></div>\n";
         corps += corpsDeHtml(m_pages[i].html);
-        corps += "\n<div style=\"text-align:center; margin-top:28px;\">"
+
+        bool aDesLiens = m_pages[i].html.contains("<a ", Qt::CaseInsensitive);
+        QString titreMin = m_pages[i].titre.toLower();
+        bool estFin = titreMin.contains("victoire") || titreMin.contains("defaite")
+                      || titreMin.contains("défaite") || titreMin.contains("mort");
+        if (!aDesLiens && !estFin && i + 1 < m_pages.size()) {
+            corps += "\n<div style=\"text-align:center; margin-top:24px;\">"
+                     "<a href=\"page" + QString::number(i + 2) + ".html\">Continuer →</a></div>";
+        }
+
+        corps += "\n<div style=\"text-align:center; margin-top:18px;\">"
+                 "<a class=\"lien-retour\" href=\"index.html\">← Retour</a></div>";
+        corps += "\n<div style=\"text-align:center; margin-top:12px;\">"
                  "<a href=\"index.html\">↩ Retour au sommaire</a></div>";
         corps += scriptJeu.arg(i + 1).arg(initStr).arg(effetStr);
 

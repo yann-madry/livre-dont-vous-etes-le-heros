@@ -39,6 +39,8 @@ void FenetreRun::chargerLivre(const Livre &livre, int departPv, int departXp,
 
 void FenetreRun::demarrer()
 {
+    m_historiquePage.clear();
+    m_historiqueEtat.clear();
     m_etat = EtatJoueur();
     m_etat.pv = m_departPv;
     m_etat.xp = m_departXp;
@@ -74,7 +76,7 @@ void FenetreRun::afficherPage(int id)
     QString texte = page.texteHtml();
     QRegularExpression reLien("<a\\b[^>]*>.*?</a>",
                               QRegularExpression::DotMatchesEverythingOption
-                                  | QRegularExpression::CaseInsensitiveOption);
+                              | QRegularExpression::CaseInsensitiveOption);
     texte.remove(reLien);
     ui->zoneTexte->setHtml(texte);
 
@@ -83,6 +85,7 @@ void FenetreRun::afficherPage(int id)
 
     if (m_etat.estMort()) {
         afficherFin("Vous avez succombé. Fin de l'aventure.");
+        ajouterBoutonRetour();
         return;
     }
 
@@ -92,6 +95,7 @@ void FenetreRun::afficherPage(int id)
         } else {
             afficherFin("Défaite… Votre aventure s'achève ici.");
         }
+        ajouterBoutonRetour();
         return;
     }
 
@@ -110,21 +114,57 @@ void FenetreRun::afficherPage(int id)
     }
 
     if (nbVisibles == 0) {
-        afficherFin("Fin de l'aventure.");
+        if (m_livre.contientPage(id + 1)) {
+            QPushButton *bouton = new QPushButton("Continuer →", ui->conteneurChoix);
+            connect(bouton, &QPushButton::clicked, this, [this, id]() {
+                m_historiquePage.append(id);
+                m_historiqueEtat.append(m_etat);
+                afficherPage(id + 1);
+            });
+            ui->layoutChoix->addWidget(bouton);
+        } else {
+            afficherFin("Fin de l'aventure.");
+        }
     }
+
+    ajouterBoutonRetour();
 }
 
 void FenetreRun::allerVersPage(const Choix &choix)
 {
+    m_historiquePage.append(m_pageCourante);
+    m_historiqueEtat.append(m_etat);
+
     choix.appliquerEffets(m_etat);
 
     if (m_etat.estMort()) {
         majEtat();
         afficherFin("Vous avez succombé. Fin de l'aventure.");
+        ajouterBoutonRetour();
         return;
     }
 
     afficherPage(choix.pageCible());
+}
+
+void FenetreRun::retour()
+{
+    if (m_historiquePage.isEmpty()) {
+        return;
+    }
+    m_etat = m_historiqueEtat.takeLast();
+    int page = m_historiquePage.takeLast();
+    afficherPage(page);
+}
+
+void FenetreRun::ajouterBoutonRetour()
+{
+    if (m_historiquePage.isEmpty()) {
+        return;
+    }
+    QPushButton *bouton = new QPushButton("← Retour", ui->conteneurChoix);
+    connect(bouton, &QPushButton::clicked, this, &FenetreRun::retour);
+    ui->layoutChoix->addWidget(bouton);
 }
 
 void FenetreRun::majEtat()

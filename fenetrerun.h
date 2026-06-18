@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QMap>
+#include <QList>
 #include <QStringList>
 #include "livre.h"
 #include "etatjoueur.h"
@@ -36,6 +37,8 @@ private:
     void demarrer();
     void afficherPage(int id);
     void allerVersPage(const Choix &choix);
+    void retour();
+    void ajouterBoutonRetour();
     void majEtat();
     void viderChoix();
     void afficherFin(const QString &message);
@@ -49,6 +52,8 @@ private:
     int m_departXp;
     QStringList m_departObjets;
     QMap<int, EffetEntree> m_effets;
+    QList<int> m_historiquePage;
+    QList<EtatJoueur> m_historiqueEtat;
 };
 
 #endif

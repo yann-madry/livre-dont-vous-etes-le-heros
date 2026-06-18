@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Le seuil de la caverne</title>
+<title>La salle aux gobelins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
@@ -132,14 +132,13 @@
 <body>
   <div class="page">
     <div class="ornement">&#10022; &#10022; &#10022;</div>
-    <h1 class="titre">Le seuil de la caverne</h1>
+    <h1 class="titre">La salle aux gobelins</h1>
     <div class="contenu">
 <div class="hud">PV : <span id="hud-pv"></span> · XP : <span id="hud-xp"></span> · Objets : <span id="hud-objets"></span><a href="index.html">Recommencer</a></div>
 
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Une caverne beante s'ouvre devant vous, l'air sent le soufre. Votre torche crepite faiblement dans l'obscurite.</p>
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Que decidez-vous ?</p>
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page2.html#pv=-5"><span style=" text-decoration: underline; color:#094fd1;">Entrer dans la caverne sombre</span></a></p>
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page3.html"><span style=" text-decoration: underline; color:#094fd1;">Contourner par la riviere</span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Des gobelins endormis ronflent autour d'un coffre. Une epee rouillee accroche la lueur de votre torche.</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page4.html#objet=Epee"><span style=" text-decoration: underline; color:#094fd1;">Ramasser l'epee rouillee </span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page5.html#pv=-10"><span style=" text-decoration: underline; color:#094fd1;">Filer en courant vers le tunnel </span></a></p>
 <div style="text-align:center; margin-top:18px;"><a class="lien-retour" href="index.html">← Retour</a></div>
 <div style="text-align:center; margin-top:12px;"><a href="index.html">↩ Retour au sommaire</a></div>
 <script>
@@ -239,9 +238,9 @@ function conditionRemplie(etat, fragment) {
   return true;
 }
 window.addEventListener("DOMContentLoaded", function() {
-  var pageActuelle = 1;
-  var initJeu = "pv=30;xp=0;objet=Torche";
-  var effetPage = "";
+  var pageActuelle = 2;
+  var initJeu = "";
+  var effetPage = "pv=-5;xp=10";
   var brut = localStorage.getItem("ldvelh");
   var etat;
   if (brut === null) {

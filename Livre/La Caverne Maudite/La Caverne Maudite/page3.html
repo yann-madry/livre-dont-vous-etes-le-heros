@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>L'antre du dragon</title>
+<title>La riviere souterraine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
@@ -132,13 +132,13 @@
 <body>
   <div class="page">
     <div class="ornement">&#10022; &#10022; &#10022;</div>
-    <h1 class="titre">L'antre du dragon</h1>
+    <h1 class="titre">La riviere souterraine</h1>
     <div class="contenu">
 <div class="hud">PV : <span id="hud-pv"></span> · XP : <span id="hud-xp"></span> · Objets : <span id="hud-objets"></span><a href="index.html">Recommencer</a></div>
 
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Un dragon ecarlate entrouvre un oeil de braise. Le combat parait inevitable.</p>
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page7.html#requiert=Epee;xp=20"><span style=" text-decoration: underline; color:#094fd1;">Brandir l'epee et frapper</span></a></p>
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page8.html"><span style=" text-decoration: underline; color:#094fd1;">L'attaquer a mains nues</span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Une eau noire murmure entre les rochers glissants.</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page5.html#pv=-8"><span style=" text-decoration: underline; color:#094fd1;">Traverser a la nage </span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page4.html#xp=5"><span style=" text-decoration: underline; color:#094fd1;">Suivre la berge en observant les traces </span></a></p>
 <div style="text-align:center; margin-top:18px;"><a class="lien-retour" href="index.html">← Retour</a></div>
 <div style="text-align:center; margin-top:12px;"><a href="index.html">↩ Retour au sommaire</a></div>
 <script>
@@ -238,9 +238,9 @@ function conditionRemplie(etat, fragment) {
   return true;
 }
 window.addEventListener("DOMContentLoaded", function() {
-  var pageActuelle = 6;
+  var pageActuelle = 3;
   var initJeu = "";
-  var effetPage = "pv=-5;xp=10";
+  var effetPage = "pv=-8;xp=5;objet=épée";
   var brut = localStorage.getItem("ldvelh");
   var etat;
   if (brut === null) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Le piege a pieux</title>
+<title>Le seuil de la caverne</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <style>
@@ -132,12 +132,14 @@
 <body>
   <div class="page">
     <div class="ornement">&#10022; &#10022; &#10022;</div>
-    <h1 class="titre">Le piege a pieux</h1>
+    <h1 class="titre">Le seuil de la caverne</h1>
     <div class="contenu">
 <div class="hud">PV : <span id="hud-pv"></span> · XP : <span id="hud-xp"></span> · Objets : <span id="hud-objets"></span><a href="index.html">Recommencer</a></div>
 
-<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Le sol se derobe sous vos pieds ! Vous tombez sur des pieux aceres et vous vous relevez en sang.</p>
-<div style="text-align:center; margin-top:24px;"><a href="page6.html">Continuer →</a></div>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Une caverne beante s'ouvre devant vous, l'air sent le soufre. Votre torche crepite dans l'obscurite.</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Que decidez-vous ?</p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page2.html#pv=-5"><span style=" text-decoration: underline; color:#094fd1;">Entrer dans la caverne sombre </span></a></p>
+<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="page3.html#xp=5"><span style=" text-decoration: underline; color:#094fd1;">Contourner prudemment par la riviere </span></a></p>
 <div style="text-align:center; margin-top:18px;"><a class="lien-retour" href="index.html">← Retour</a></div>
 <div style="text-align:center; margin-top:12px;"><a href="index.html">↩ Retour au sommaire</a></div>
 <script>
@@ -237,9 +239,9 @@ function conditionRemplie(etat, fragment) {
   return true;
 }
 window.addEventListener("DOMContentLoaded", function() {
-  var pageActuelle = 5;
-  var initJeu = "";
-  var effetPage = "pv=-8;xp=0";
+  var pageActuelle = 1;
+  var initJeu = "pv=30;xp=0;objet=Torche";
+  var effetPage = "";
   var brut = localStorage.getItem("ldvelh");
   var etat;
   if (brut === null) {

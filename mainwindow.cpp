@@ -164,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent)
     rafraichirListePages();
     ui->listePages->setCurrentRow(0);
     definirFichierCourant("");
+    setWindowIcon(QIcon(":/Icones/logo.png"));
 }
 
 MainWindow::~MainWindow()

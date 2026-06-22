@@ -364,93 +364,6 @@ void MainWindow::changerOnglet(int index)
     }
 }
 
-void MainWindow::verifierCoherenceLivre()
-{
-    sauvegarderPageCourante();
-
-    int n = m_pages.size();
-    if (n == 0)
-        return;
-
-    QList<QList<int>> liens;
-    QStringList liensCasses;
-    QRegularExpression reLien("<a\\b[^>]*href=\"([^\"]*)\"[^>]*>",
-                              QRegularExpression::CaseInsensitiveOption);
-    QRegularExpression reNum("(\\d+)");
-
-    for (int i = 0; i < n; ++i) {
-        QList<int> cibles;
-        bool aLien = false;
-        QRegularExpressionMatchIterator it = reLien.globalMatch(m_pages[i].html);
-        while (it.hasNext()) {
-            QString href = it.next().captured(1);
-            QString base = href;
-            int diese = href.indexOf('#');
-            if (diese != -1)
-                base = href.left(diese);
-            QRegularExpressionMatch mNum = reNum.match(base);
-            if (mNum.hasMatch()) {
-                aLien = true;
-                int cible = mNum.captured(1).toInt();
-                cibles.append(cible);
-                if (cible < 1 || cible > n)
-                    liensCasses.append("Page " + QString::number(i + 1) + " vers page "
-                                       + QString::number(cible) + " (inexistante)");
-            }
-        }
-
-        QString titreMin = m_pages[i].titre.toLower();
-        bool estFin = titreMin.contains("victoire") || titreMin.contains("defaite")
-                      || titreMin.contains("défaite") || titreMin.contains("mort");
-        if (!aLien && !estFin && i + 1 < n)
-            cibles.append(i + 2);
-
-        liens.append(cibles);
-    }
-
-    QList<bool> vu;
-    for (int i = 0; i < n; ++i)
-        vu.append(false);
-
-    QList<int> pile;
-    pile.append(1);
-    vu[0] = true;
-    while (!pile.isEmpty()) {
-        int p = pile.takeLast();
-        QList<int> cibles = liens[p - 1];
-        for (int k = 0; k < cibles.size(); ++k) {
-            int c = cibles[k];
-            if (c >= 1 && c <= n && !vu[c - 1]) {
-                vu[c - 1] = true;
-                pile.append(c);
-            }
-        }
-    }
-
-    QStringList inaccessibles;
-    for (int i = 0; i < n; ++i) {
-        if (!vu[i]) {
-            QString titre = m_pages[i].titre;
-            if (titre.isEmpty())
-                titre = "sans titre";
-            inaccessibles.append("Page " + QString::number(i + 1) + " (" + titre + ")");
-        }
-    }
-
-    QString message;
-    if (inaccessibles.isEmpty() && liensCasses.isEmpty()) {
-        message = "Tout est cohérent : toutes les pages sont accessibles depuis la page 1 "
-                  "et aucun lien ne pointe vers une page inexistante.";
-    } else {
-        if (!inaccessibles.isEmpty())
-            message += "Pages jamais accessibles :\n- " + inaccessibles.join("\n- ") + "\n\n";
-        if (!liensCasses.isEmpty())
-            message += "Liens cassés :\n- " + liensCasses.join("\n- ");
-    }
-
-    QMessageBox::information(this, "Vérification de la cohérence", message);
-}
-
 void MainWindow::definirRaccourcis()
 {
     ui->actionNouveau->setShortcut(QKeySequence::New);
@@ -1245,8 +1158,7 @@ window.addEventListener("DOMContentLoaded", function() {
 
         bool aDesLiens = m_pages[i].html.contains("<a ", Qt::CaseInsensitive);
         QString titreMin = m_pages[i].titre.toLower();
-        bool estFin = titreMin.contains("victoire") || titreMin.contains("defaite")
-                      || titreMin.contains("défaite") || titreMin.contains("mort");
+        bool estFin = titreMin.contains("victoire") || titreMin.contains("defaite") || titreMin.contains("défaite") || titreMin.contains("mort");
         if (!aDesLiens && !estFin && i + 1 < m_pages.size()) {
             corps += "\n<div style=\"text-align:center; margin-top:24px;\">"
                      "<a href=\"page" + QString::number(i + 2) + ".html\">Continuer →</a></div>";
@@ -1520,4 +1432,90 @@ void MainWindow::majTitre()
     else
         nom = QFileInfo(m_fichierCourant).fileName();
     setWindowTitle(nom + "[*] - Éditeur LDVELH");
+}
+
+void MainWindow::verifierCoherenceLivre()
+{
+    sauvegarderPageCourante();
+
+    if (m_pages.isEmpty()) {
+        QMessageBox::warning(this, "Analyse impossible", "Le livre ne contient aucune page.");
+        return;
+    }
+
+    Livre livreAventure = construireLivre();
+
+    QVector<int> pagesVisitees;
+    QVector<int> impassesOubliees;
+    QVector<int> pileAVisiter;
+
+    pileAVisiter.append(1);
+
+    while (!pileAVisiter.isEmpty()) {
+        int idActuel = pileAVisiter.takeLast();
+
+        if (pagesVisitees.contains(idActuel)) {
+            continue;
+        }
+
+        pagesVisitees.append(idActuel);
+
+        if (!livreAventure.contientPage(idActuel)) {
+            continue;
+        }
+
+        Page pageActuelle = livreAventure.getPage(idActuel);
+        QVector<Choix> tousLesChoix = pageActuelle.choix();
+
+        bool cEstUneFinDeLHistoire = (pageActuelle.type() == Page::Type::Victoire ||pageActuelle.type() == Page::Type::Defaite);
+
+        if (tousLesChoix.isEmpty() && !cEstUneFinDeLHistoire) {
+            impassesOubliees.append(idActuel);
+        }
+
+        for (int i = 0; i < tousLesChoix.size(); ++i) {
+            int idCible = tousLesChoix[i].pageCible();
+
+            if (idCible > 0) {
+                pileAVisiter.append(idCible);
+            }
+        }
+    }
+
+    bool toutEstNickel = true;
+    QString listeOrphelines = "";
+    QString listeImpasses = "";
+
+    for (int i = 0; i < m_pages.size(); ++i) {
+        int idPageDuLivre = i + 1;
+
+        if (!pagesVisitees.contains(idPageDuLivre)) {
+            QString titrePage = m_pages[i].titre.isEmpty() ? "(sans titre)" : m_pages[i].titre; // "?" remplace les if else de test donc gain de temps (vu en qualité de dev)
+            listeOrphelines += "- Page " + QString::number(idPageDuLivre) + " : " + titrePage + "\n";
+            toutEstNickel = false;
+        }
+    }
+
+    for (int i = 0; i < impassesOubliees.size(); ++i) {
+        int idImpasse = impassesOubliees[i];
+        QString titrePage = m_pages[idImpasse - 1].titre.isEmpty() ? "(sans titre)" : m_pages[idImpasse - 1].titre;
+        listeImpasses += "- Page " + QString::number(idImpasse) + " : " + titrePage + "\n";
+        toutEstNickel = false;
+    }
+
+    if (toutEstNickel) {
+        QMessageBox::information(this, "Vérification terminée","Aucun problème détecté. Toutes les pages sont accessibles ");
+    } else {
+        QString messageAlerte = "Des incohérences logiques ont été détectées dans le livre :\n\n";
+
+        if (!listeOrphelines.isEmpty()) {
+            messageAlerte += "Pages inaccessibles (aucun choix ne mène à elles) :\n" + listeOrphelines + "\n";
+        }
+
+        if (!listeImpasses.isEmpty()) {
+            messageAlerte += "Culs-de-sac (l'histoire s'arrête sans choix et sans être une fin de partie) :\n" + listeImpasses;
+        }
+
+        QMessageBox::warning(this, "Analyse du livre", messageAlerte);
+    }
 }

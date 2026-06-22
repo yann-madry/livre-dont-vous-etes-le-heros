@@ -3,8 +3,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
-Page::Page(int id, const QString &titre)
-    : m_id(id), m_titre(titre)
+Page::Page(int id, const QString &titre) : m_id(id), m_titre(titre)
 {
 }
 
@@ -81,28 +80,30 @@ bool Page::estFin() const
 QJsonObject Page::versJson() const
 {
     QJsonObject o;
-    o["id"]    = m_id;
-    o["titre"] = m_titre;
-    o["texte"] = m_texteHtml;
-    o["image"] = m_image;
-    o["type"]  = static_cast<int>(m_type);
+    o["id"]= m_id;
+    o["titre"]= m_titre;
+    o["texte"]= m_texteHtml;
+    o["image"]= m_image;
+    o["type"]= static_cast<int>(m_type);
     QJsonArray arr;
-    for (const Choix &c : m_choix)
+    for (const Choix &c : m_choix){
         arr.append(c.versJson());
-    o["choix"] = arr;
+    }
+    o["choix"]= arr;
     return o;
 }
 
 Page Page::depuisJson(const QJsonObject &o)
 {
     Page p;
-    p.m_id        = o["id"].toInt(-1);
-    p.m_titre     = o["titre"].toString();
+    p.m_id = o["id"].toInt(-1);
+    p.m_titre = o["titre"].toString();
     p.m_texteHtml = o["texte"].toString();
-    p.m_image     = o["image"].toString();
-    p.m_type      = static_cast<Type>(o["type"].toInt());
+    p.m_image = o["image"].toString();
+    p.m_type = static_cast<Type>(o["type"].toInt());
     const QJsonArray arr = o["choix"].toArray();
-    for (const QJsonValue &v : arr)
+    for (const QJsonValue &v : arr){
         p.m_choix.append(Choix::depuisJson(v.toObject()));
+    }
     return p;
 }
